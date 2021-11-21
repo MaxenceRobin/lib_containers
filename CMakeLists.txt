@@ -7,6 +7,8 @@ set(TARGET_NAME containers)
 
 set(SOURCES
         src/libcontainers.c
+        src/libiterators.c
+        src/libvectors.c
 )
 
 set(PUBLIC_HEADERS
