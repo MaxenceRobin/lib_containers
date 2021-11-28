@@ -51,6 +51,7 @@ static int for_each(
         }
 
         res = 0;
+
 error_iterate:
 error_call:
         iterator_destroy(it);
@@ -96,4 +97,34 @@ int container_for_each_r(
                 return -EINVAL;
 
         return for_each(ctx, cb, data, container_last, iterator_previous);
+}
+
+int container_filter(const struct container *ctx, bool (*cb)(void *))
+{
+        if (!ctx || !cb)
+                return -EINVAL;
+
+        int res;
+        struct iterator *it = container_first(ctx);
+        if (!it) {
+                res = -ENOMEM;
+                goto error_get;
+        }
+
+        while (iterator_is_valid(it)) {
+                if (cb(iterator_data(it)))
+                        res = iterator_next(it);
+                else
+                        res = iterator_remove(it);
+
+                if (res < 0)
+                        goto error_iterate;
+        }
+
+        res = 0;
+
+error_iterate:
+        iterator_destroy(it);
+error_get:
+        return res;
 }
