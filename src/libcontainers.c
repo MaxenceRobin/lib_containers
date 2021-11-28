@@ -99,7 +99,10 @@ int container_for_each_r(
         return for_each(ctx, cb, data, container_last, iterator_previous);
 }
 
-int container_filter(const struct container *ctx, bool (*cb)(void *))
+int container_filter(
+                const struct container *ctx,
+                bool (*cb)(void *, void *),
+                void *data)
 {
         if (!ctx || !cb)
                 return -EINVAL;
@@ -112,7 +115,7 @@ int container_filter(const struct container *ctx, bool (*cb)(void *))
         }
 
         while (iterator_is_valid(it)) {
-                if (cb(iterator_data(it)))
+                if (cb(iterator_data(it), data))
                         res = iterator_next(it);
                 else
                         res = iterator_remove(it);

@@ -44,7 +44,7 @@ static int increase(void *data, void *ctx)
         return 0;
 }
 
-bool filter_even(void *data)
+bool filter_even(void *data, void *ctx)
 {
         int *value = data;
 
@@ -88,7 +88,7 @@ int main()
         container_for_each_r(ctx, increase, &(int){0});
         print_vector(vector);
 
-        container_filter(ctx, filter_even);
+        container_filter(ctx, filter_even, NULL);
         print_vector(vector);
 
         vector_destroy(vector);
