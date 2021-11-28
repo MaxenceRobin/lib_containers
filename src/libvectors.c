@@ -52,9 +52,9 @@ static struct iterator *vector_it_copy(const struct iterator *it)
         if (!copy)
                 return NULL;
 
-        const struct vector_it *vec_it = (const struct vector_it *)it;
-        copy->vector = vec_it->vector;
-        copy->index = vec_it->index;
+        const struct vector_it *v_it = (const struct vector_it *)it;
+        copy->vector = v_it->vector;
+        copy->index = v_it->index;
 
         return (struct iterator *)copy;
 }
@@ -66,35 +66,51 @@ static void vector_it_destroy(const struct iterator *it)
 
 static bool vector_it_is_valid(const struct iterator *it)
 {
-        const struct vector_it *vec_it = (const struct vector_it *)it;
-        const struct meta *meta = vector_to_meta(vec_it->vector);
+        const struct vector_it *v_it = (const struct vector_it *)it;
+        const struct meta *meta = vector_to_meta(v_it->vector);
 
-        return (vec_it->index < meta->len);
+        return (v_it->index < meta->len);
 }
 
 static int vector_it_next(struct iterator *it)
 {
-        struct vector_it *vec_it = (struct vector_it *)it;
-        ++vec_it->index;
+        struct vector_it *v_it = (struct vector_it *)it;
+        ++v_it->index;
         return 0;
 }
 
 static int vector_it_previous(struct iterator *it)
 {
-        struct vector_it *vec_it = (struct vector_it *)it;
-        --vec_it->index;
+        struct vector_it *v_it = (struct vector_it *)it;
+        --v_it->index;
         return 0;
 }
 
-static void *vector_it_data(const struct iterator *it)
+static void *vector_it_data(struct iterator *it)
 {
-        const struct vector_it *vec_it = (const struct vector_it *)it;
-        const struct meta *meta = vector_to_meta(vec_it->vector);
+        struct vector_it *v_it = (struct vector_it *)it;
+        const struct meta *meta = vector_to_meta(v_it->vector);
 
-        if (vec_it->index >= meta->len)
+        if (v_it->index >= meta->len)
                 return NULL;
 
-        return (char *)vec_it->vector + vec_it->index * meta->elem_size;
+        return (char *)v_it->vector + v_it->index * meta->elem_size;
+}
+
+static int vector_it_insert(struct iterator *it, void *data)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        int res;
+        
+        v_it->vector = vector_insert(v_it->vector, v_it->index, data, &res);
+        return res;
+}
+
+static int vector_it_remove(struct iterator *it)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+
+        return vector_remove(v_it->vector, v_it->index);
 }
 
 static struct iterator_callbacks iterator_cbs = {
@@ -103,7 +119,9 @@ static struct iterator_callbacks iterator_cbs = {
         .is_valid = vector_it_is_valid,
         .next = vector_it_next,
         .previous = vector_it_previous,
-        .data = vector_it_data
+        .data = vector_it_data,
+        .insert = vector_it_insert,
+        .remove = vector_it_remove
 };
 
 static struct vector_it *vector_it_create()

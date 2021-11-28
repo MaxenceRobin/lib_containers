@@ -20,7 +20,9 @@ struct iterator_callbacks {
         bool (*is_valid)(const struct iterator *);
         int (*next)(struct iterator *);
         int (*previous)(struct iterator *);
-        void *(*data)(const struct iterator *);
+        void *(*data)(struct iterator *);
+        int (*insert)(struct iterator *, void *);
+        int (*remove)(struct iterator *);
 };
 
 struct iterator {
