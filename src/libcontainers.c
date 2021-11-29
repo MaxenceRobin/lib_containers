@@ -10,6 +10,7 @@
 
 #include <errno.h>
 #include <stddef.h>
+#include <string.h>
 
 /* Static functions ----------------------------------------------------------*/
 
@@ -51,7 +52,6 @@ static int for_each(
         }
 
         res = 0;
-
 error_iterate:
 error_call:
         iterator_destroy(it);
@@ -125,9 +125,33 @@ int container_filter(
         }
 
         res = 0;
-
 error_iterate:
         iterator_destroy(it);
 error_get:
         return res;
+}
+
+bool container_contains(const struct container *ctx, const void *data)
+{
+        if (!ctx || !data)
+                return false;
+
+        struct iterator *it = container_first(ctx);
+        if (!it)
+                return false;
+
+        bool found = true;
+
+        while (iterator_is_valid(it)) {
+                if (memcmp(iterator_data(it), data, ctx->elem_size) == 0)
+                        goto data_found;
+                
+                if (iterator_next(it) < 0)
+                        break;
+        }
+
+        found = false;
+data_found:
+        iterator_destroy(it);
+        return found;
 }

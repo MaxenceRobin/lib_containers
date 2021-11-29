@@ -11,6 +11,8 @@
 #include "libcontainers.h"
 #include "libiterators.h"
 
+#include <stddef.h>
+
 /* Definitions ---------------------------------------------------------------*/
 
 struct container_callbacks {
@@ -20,6 +22,7 @@ struct container_callbacks {
 
 struct container {
         const struct container_callbacks *cbs;
+        size_t elem_size;
 };
 
 #endif /* LIB_CONTAINERS_PRIVATE_H */

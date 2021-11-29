@@ -16,8 +16,7 @@
 /* Definitions ---------------------------------------------------------------*/
 
 struct meta {
-        struct container container; /* Placed at top for inheritance */
-        size_t elem_size;
+        struct container ctx; /* Placed at top for inheritance */
         size_t len;
         size_t capacity;
 };
@@ -94,7 +93,7 @@ static void *vector_it_data(struct iterator *it)
         if (v_it->index >= meta->len)
                 return NULL;
 
-        return (char *)v_it->vector + v_it->index * meta->elem_size;
+        return (char *)v_it->vector + v_it->index * meta->ctx.elem_size;
 }
 
 static int vector_it_insert(struct iterator *it, void *data)
@@ -184,7 +183,8 @@ static void *set_capacity(void *vector, size_t capacity, int *ret)
         struct meta *new_meta;
         int res;
         
-        new_meta = realloc(meta, sizeof(*meta) + meta->elem_size * capacity);
+        new_meta = realloc(meta,
+                                sizeof(*meta) + meta->ctx.elem_size * capacity);
         if (!new_meta) {
                 res = -ENOMEM;
                 goto error_realloc;
@@ -242,8 +242,8 @@ void *vector_create(size_t elem_size, size_t count)
         if (!meta)
                 return NULL;
 
-        meta->container.cbs = &container_cbs;
-        meta->elem_size = elem_size;
+        meta->ctx.cbs = &container_cbs;
+        meta->ctx.elem_size = elem_size;
         meta->len = count;
         meta->capacity = count;
 
@@ -272,9 +272,9 @@ void *vector_push(void *vector, void *data, int *ret)
                 goto error_len;
 
         const struct meta *meta = vector_to_meta(vector);
-        memcpy((char *)vector + (meta->len - 1) * meta->elem_size,
+        memcpy((char *)vector + (meta->len - 1) * meta->ctx.elem_size,
                         data,
-                        meta->elem_size);
+                        meta->ctx.elem_size);
         res = 0;
 
 error_len:
@@ -318,14 +318,14 @@ void *vector_insert(void *vector, unsigned int pos, void *data, int *ret)
                 goto error_len;
 
         meta = vector_to_meta(vector); /* 'vector' may have changed */
-        char *offset = (char *)vector + pos * meta->elem_size;
+        char *offset = (char *)vector + pos * meta->ctx.elem_size;
         /* We substract 2 from the moved size because the length has just been
          * increased by 1.
         */
-        memmove(offset + meta->elem_size,
+        memmove(offset + meta->ctx.elem_size,
                         offset,
-                        (meta->len - pos - 2) * meta->elem_size);
-        memcpy(offset, data, meta->elem_size);
+                        (meta->len - pos - 2) * meta->ctx.elem_size);
+        memcpy(offset, data, meta->ctx.elem_size);
         res = 0;
         
 error_len:
@@ -346,10 +346,10 @@ int vector_remove(void *vector, unsigned int pos)
         if (meta->len <= pos)
                 return -ERANGE;
 
-        char *offset = (char *)vector + pos * meta->elem_size;
+        char *offset = (char *)vector + pos * meta->ctx.elem_size;
         memmove(offset,
-                        offset + meta->elem_size,
-                        (meta->len - pos - 1) * meta->elem_size);
+                        offset + meta->ctx.elem_size,
+                        (meta->len - pos - 1) * meta->ctx.elem_size);
         --meta->len;
         return 0;
 }

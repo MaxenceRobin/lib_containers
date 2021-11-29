@@ -85,4 +85,13 @@ int container_filter(
                 bool (*cb)(void *, void *),
                 void *data);
 
+/**
+ * @brief Indicates if 'ctx' contains 'data'.
+ * 
+ * @return true if 'ctx' contains 'data'.
+ * @return false if 'ctx' does not contain 'data', if 'ctx' or 'data' are
+ * invalid or if the iteration failed.
+ */
+bool container_contains(const struct container *ctx, const void *data);
+
 #endif /* LIB_CONTAINERS_H */
