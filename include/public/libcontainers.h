@@ -69,23 +69,6 @@ int container_for_each_r(
                 void *data);
 
 /**
- * @brief Filters every element of 'ctx' according to 'cb', with 'data' as
- * context.
- * 
- * @param cb : For each call, the element of 'ctx' will be the first argument
- * and 'data' will be the second. It must return 'true' to keep it and 'false'
- * to discard it.
- * 
- * @return 0 on success.
- * @return -EINVAL if 'ctx' or 'cb' are invalid.
- * @return A negative errno if the iteration failed.
- */
-int container_filter(
-                const struct container *ctx,
-                bool (*cb)(void *, void *),
-                void *data);
-
-/**
  * @brief Indicates if 'ctx' contains 'data'.
  * 
  * @return true if 'ctx' contains 'data'.

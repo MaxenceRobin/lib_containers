@@ -21,8 +21,6 @@ struct iterator_callbacks {
         int (*next)(struct iterator *);
         int (*previous)(struct iterator *);
         void *(*data)(struct iterator *);
-        int (*insert)(struct iterator *, void *);
-        int (*remove)(struct iterator *);
 };
 
 struct iterator {

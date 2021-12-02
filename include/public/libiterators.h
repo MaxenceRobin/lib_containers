@@ -65,24 +65,4 @@ int iterator_previous(struct iterator *it);
  */
 void *iterator_data(struct iterator *it);
 
-/**
- * @brief Inserts 'data' where 'it' points to.
- *  
- * @return 0 on success.
- * @return -EINVAL if 'it' or 'data' are invalid.
- * @return -ENOTSUP if this operation is not supported.
- * @return A negative errno for other failures.
- */
-int iterator_insert(struct iterator *it, void *data);
-
-/**
- * @brief Removes the item 'it' points to.
- * 
- * @return 0 on success.
- * @return -EINVAL if 'it' is invalid.
- * @return -ENOTSUP if this operation is not supported.
- * @return A negative errno for other failures.
- */
-int iterator_remove(struct iterator *it);
-
 #endif /* LIB_ITERATORS_H */

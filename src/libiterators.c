@@ -67,25 +67,3 @@ void *iterator_data(struct iterator *it)
 
         return it->cbs->data(it);
 }
-
-int iterator_insert(struct iterator *it, void *data)
-{
-        if (!it || !data)
-                return -EINVAL;
-
-        if (!it->cbs || !it->cbs->insert)
-                return -ENOTSUP;
-
-        return it->cbs->insert(it, data);
-}
-
-int iterator_remove(struct iterator *it)
-{
-        if (!it)
-                return -EINVAL;
-
-        if (!it->cbs || !it->cbs->remove)
-                return -ENOTSUP;
-
-        return it->cbs->remove(it);
-}

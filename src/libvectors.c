@@ -96,31 +96,13 @@ static void *vector_it_data(struct iterator *it)
         return (char *)v_it->vector + v_it->index * meta->ctx.elem_size;
 }
 
-static int vector_it_insert(struct iterator *it, void *data)
-{
-        struct vector_it *v_it = (struct vector_it *)it;
-        int res;
-        
-        v_it->vector = vector_insert(v_it->vector, v_it->index, data, &res);
-        return res;
-}
-
-static int vector_it_remove(struct iterator *it)
-{
-        struct vector_it *v_it = (struct vector_it *)it;
-
-        return vector_remove(v_it->vector, v_it->index);
-}
-
 static struct iterator_callbacks iterator_cbs = {
         .copy = vector_it_copy,
         .destroy = vector_it_destroy,
         .is_valid = vector_it_is_valid,
         .next = vector_it_next,
         .previous = vector_it_previous,
-        .data = vector_it_data,
-        .insert = vector_it_insert,
-        .remove = vector_it_remove
+        .data = vector_it_data
 };
 
 static struct vector_it *vector_it_create()
