@@ -33,6 +33,27 @@ struct iterator *container_first(const struct container *ctx);
 struct iterator *container_last(const struct container *ctx);
 
 /**
+ * @brief Inserts 'data' inside 'ctx' where 'it' points to.
+ * 
+ * @return 0 on success.
+ * @return -ENOTSUP if this operation is not supported.
+ * @return -EINVAL if 'ctx', 'it' or 'data' are invalid.
+ * @return A negative errno for other failures.
+ */
+int container_insert(
+                struct container *ctx, struct iterator *it, const void *data);
+
+/**
+ * @brief Removes the data pointed by 'it' inside 'ctx', and destroys 'it'.
+ * 
+ * @return 0 on success.
+ * @return -ENOTSUP if this operation is not supported.
+ * @return -EINVAL if 'ctx' or 'it' are invalid.
+ * @return A negative errno for other failures.
+ */
+int container_remove(struct container *ctx, const struct iterator *it);
+
+/**
  * @brief Calls 'cb' with 'data' for each element of 'ctx'.
  * 
  * @param cb : For each call, the element of 'ctx' will be the first argument
@@ -46,7 +67,7 @@ struct iterator *container_last(const struct container *ctx);
  * @return A custom negative errno if a call to 'cb' failed.
  */
 int container_for_each(
-                const struct container *ctx,
+                struct container *ctx,
                 int (*cb)(void *, void *),
                 void *data);
 
@@ -64,9 +85,17 @@ int container_for_each(
  * @return A custom negative errno if a call to 'cb' failed.
  */
 int container_for_each_r(
-                const struct container *ctx,
+                struct container *ctx,
                 int (*cb)(void *, void *),
                 void *data);
+
+/**
+ * @brief Finds 'data' inside 'ctx'.
+ * 
+ * @return An iterator over the found data on success.
+ * @return NULL on failure. 
+ */
+struct iterator *container_find(const struct container *ctx, const void *data);
 
 /**
  * @brief Indicates if 'ctx' contains 'data'.

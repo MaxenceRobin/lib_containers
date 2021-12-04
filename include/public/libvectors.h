@@ -107,7 +107,7 @@ void *vector_fit(void *vector, int *ret);
  * @return Pointer to the container of 'vector' on success.
  * @return NULL if 'vector' is invalid. 
  */
-const struct container *vector_container(const void *vector);
+struct container *vector_container(const void *vector);
 
 /**
  * @brief Returns the number of elements of 'vector'.

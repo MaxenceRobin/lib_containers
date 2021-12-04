@@ -18,6 +18,8 @@
 struct container_callbacks {
         struct iterator *(*first)(const struct container *);
         struct iterator *(*last)(const struct container *);
+        int (*insert)(struct container *, struct iterator *, const void *);
+        int (*remove)(struct container *, const struct iterator *);
 };
 
 struct container {

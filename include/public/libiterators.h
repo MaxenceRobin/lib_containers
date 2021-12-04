@@ -41,8 +41,8 @@ bool iterator_is_valid(const struct iterator *it);
  * @brief Makes 'it' point to the next element of its container.
  * 
  * @return 0 on success.
- * @return -EINVAL if 'it' is invalid.
  * @return -ENOTSUP if this operation is not supported.
+ * @return -EINVAL if 'it' is invalid.
  * @return A negative errno for other failures.
  */
 int iterator_next(struct iterator *it);
@@ -51,8 +51,8 @@ int iterator_next(struct iterator *it);
  * @brief Makes 'it' point to the previous element of its container.
  * 
  * @return 0 on success.
- * @return -EINVAL if 'it' is invalid.
  * @return -ENOTSUP if this operation is not supported.
+ * @return -EINVAL if 'it' is invalid.
  * @return A negative errno for other failures. 
  */
 int iterator_previous(struct iterator *it);
@@ -63,6 +63,16 @@ int iterator_previous(struct iterator *it);
  * @return The data of 'it' on success.
  * @return NULL on failure. 
  */
-void *iterator_data(struct iterator *it);
+const void *iterator_data(struct iterator *it);
+
+/**
+ * @brief Sets the data pointed by 'it' to 'data'.
+ * 
+ * @return 0 on success.
+ * @return -ENOTSUP if this operation is not supported.
+ * @return -EINVAL if 'it' or 'data' are invalid.
+ * @return A negative errno for other failures. 
+ */
+int iterator_set_data(struct iterator *it, const void *data);
 
 #endif /* LIB_ITERATORS_H */

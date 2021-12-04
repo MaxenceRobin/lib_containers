@@ -41,112 +41,6 @@ static void *meta_to_vector(const struct meta *meta)
         return (void *)(meta + 1);
 }
 
-/* Iterator implementation -----------*/
-
-static struct vector_it *vector_it_create(); /* Forward declaration */
-
-static struct iterator *vector_it_copy(const struct iterator *it)
-{
-        struct vector_it *copy = vector_it_create();
-        if (!copy)
-                return NULL;
-
-        const struct vector_it *v_it = (const struct vector_it *)it;
-        copy->vector = v_it->vector;
-        copy->index = v_it->index;
-
-        return (struct iterator *)copy;
-}
-
-static void vector_it_destroy(const struct iterator *it)
-{
-        free((struct vector_it *)it); 
-}
-
-static bool vector_it_is_valid(const struct iterator *it)
-{
-        const struct vector_it *v_it = (const struct vector_it *)it;
-        const struct meta *meta = vector_to_meta(v_it->vector);
-
-        return (v_it->index < meta->len);
-}
-
-static int vector_it_next(struct iterator *it)
-{
-        struct vector_it *v_it = (struct vector_it *)it;
-        ++v_it->index;
-        return 0;
-}
-
-static int vector_it_previous(struct iterator *it)
-{
-        struct vector_it *v_it = (struct vector_it *)it;
-        --v_it->index;
-        return 0;
-}
-
-static void *vector_it_data(struct iterator *it)
-{
-        struct vector_it *v_it = (struct vector_it *)it;
-        const struct meta *meta = vector_to_meta(v_it->vector);
-
-        if (v_it->index >= meta->len)
-                return NULL;
-
-        return (char *)v_it->vector + v_it->index * meta->ctx.elem_size;
-}
-
-static struct iterator_callbacks iterator_cbs = {
-        .copy = vector_it_copy,
-        .destroy = vector_it_destroy,
-        .is_valid = vector_it_is_valid,
-        .next = vector_it_next,
-        .previous = vector_it_previous,
-        .data = vector_it_data
-};
-
-static struct vector_it *vector_it_create()
-{
-        struct vector_it *it = malloc(sizeof(*it));
-        if (!it)
-                return NULL;
-
-        it->it.cbs = &iterator_cbs;
-        return it;
-}
-
-/* Container implementation ----------*/
-
-static struct iterator *vector_container_first(const struct container *ctx)
-{
-        struct vector_it *it = vector_it_create();
-        if (!it)
-                return NULL;
-
-        it->vector = meta_to_vector((struct meta *)ctx);
-        it->index = 0;
-
-        return (struct iterator *)it;
-}
-
-static struct iterator *vector_container_last(const struct container *ctx)
-{
-        struct vector_it *it = vector_it_create();
-        if (!it)
-                return NULL;
-
-        const struct meta *meta = (const struct meta *)ctx;
-        it->vector = meta_to_vector(meta);
-        it->index = meta->len - 1;
-
-        return (struct iterator *)it;
-}
-
-static const struct container_callbacks container_cbs = {
-        .first = vector_container_first,
-        .last = vector_container_last
-};
-
 /* Private utility functions ---------*/
 
 /**
@@ -215,6 +109,206 @@ error_capacity:
 
         return vector;
 }
+
+static void *insert_element(
+                void *vector, unsigned int pos, const void *data, int *ret)
+{
+        int res;
+
+        struct meta *meta = vector_to_meta(vector);
+        vector = set_len(vector, meta->len + 1, &res);
+        if (res < 0)
+                goto error_len;
+
+        meta = vector_to_meta(vector); /* 'vector' may have changed */
+        char *offset = (char *)vector + pos * meta->ctx.elem_size;
+        /* We substract 2 from the moved size because the length has just been
+         * increased by 1.
+        */
+        memmove(offset + meta->ctx.elem_size,
+                        offset,
+                        (meta->len - pos - 2) * meta->ctx.elem_size);
+        memcpy(offset, data, meta->ctx.elem_size);
+        res = 0;
+        
+error_len:
+        if (ret)
+                *ret = res;
+
+        return vector;
+}
+
+static int remove_element(void *vector, unsigned int pos)
+{
+        struct meta *meta = vector_to_meta(vector);
+
+        char *offset = (char *)vector + pos * meta->ctx.elem_size;
+        memmove(offset,
+                        offset + meta->ctx.elem_size,
+                        (meta->len - pos - 1) * meta->ctx.elem_size);
+        --meta->len;
+        return 0;
+}
+
+static bool it_is_valid(const void *vector, const struct vector_it *it)
+{
+        return (it->vector == vector) 
+                        && (it->index < vector_to_meta(vector)->len);
+}
+
+/* Iterator implementation -----------*/
+
+static struct vector_it *vector_it_create(); /* Forward declaration */
+
+static struct iterator *vector_it_copy(const struct iterator *it)
+{
+        struct vector_it *copy = vector_it_create();
+        if (!copy)
+                return NULL;
+
+        const struct vector_it *v_it = (const struct vector_it *)it;
+        copy->vector = v_it->vector;
+        copy->index = v_it->index;
+
+        return (struct iterator *)copy;
+}
+
+static void vector_it_destroy(const struct iterator *it)
+{
+        free((struct vector_it *)it); 
+}
+
+static bool vector_it_is_valid(const struct iterator *it)
+{
+        const struct vector_it *v_it = (const struct vector_it *)it;
+
+        return it_is_valid(v_it->vector, v_it);
+}
+
+static int vector_it_next(struct iterator *it)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        ++v_it->index;
+        return 0;
+}
+
+static int vector_it_previous(struct iterator *it)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        --v_it->index;
+        return 0;
+}
+
+static const void *vector_it_data(struct iterator *it)
+{
+        if (!vector_it_is_valid(it))
+                return NULL;
+
+        const struct vector_it *v_it = (const struct vector_it *)it;
+        const struct meta *meta = vector_to_meta(v_it->vector);
+
+        return (char *)v_it->vector + v_it->index * meta->ctx.elem_size;
+}
+
+static int vector_it_set_data(struct iterator *it, const void *data)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        const struct meta *meta = vector_to_meta(v_it->vector);
+
+        if (v_it->index >= meta->len)
+                return -ERANGE;
+
+        memcpy((char *)v_it->vector + v_it->index * meta->ctx.elem_size,
+                        data,
+                        meta->ctx.elem_size);
+
+        return 0;
+}
+
+static struct iterator_callbacks iterator_cbs = {
+        .copy = vector_it_copy,
+        .destroy = vector_it_destroy,
+        .is_valid = vector_it_is_valid,
+        .next = vector_it_next,
+        .previous = vector_it_previous,
+        .data = vector_it_data,
+        .set_data = vector_it_set_data
+};
+
+static struct vector_it *vector_it_create()
+{
+        struct vector_it *it = malloc(sizeof(*it));
+        if (!it)
+                return NULL;
+
+        it->it.cbs = &iterator_cbs;
+        return it;
+}
+
+/* Container implementation ----------*/
+
+static struct iterator *vector_container_first(const struct container *ctx)
+{
+        struct vector_it *it = vector_it_create();
+        if (!it)
+                return NULL;
+
+        it->vector = meta_to_vector((struct meta *)ctx);
+        it->index = 0;
+
+        return (struct iterator *)it;
+}
+
+static struct iterator *vector_container_last(const struct container *ctx)
+{
+        struct vector_it *it = vector_it_create();
+        if (!it)
+                return NULL;
+
+        const struct meta *meta = (const struct meta *)ctx;
+        it->vector = meta_to_vector(meta);
+        it->index = meta->len - 1;
+
+        return (struct iterator *)it;
+}
+
+static int vector_container_insert(
+                struct container *ctx, struct iterator *it, const void *data)
+{
+        const void *vector = meta_to_vector((const struct meta *)ctx);
+        struct vector_it *v_it = (struct vector_it *)it;
+
+        if (!it_is_valid(vector, v_it))
+                return -EINVAL;
+
+        int res;
+
+        v_it->vector = insert_element(v_it->vector, v_it->index, data, &res);
+        return res;
+}
+
+static int vector_container_remove(
+                struct container *ctx, const struct iterator *it)
+{
+        void *vector = meta_to_vector((const struct meta *)ctx);
+        const struct vector_it *v_it = (const struct vector_it *)it;
+
+        if (!it_is_valid(vector, v_it))
+                return -EINVAL;
+
+        const int res = remove_element(vector, v_it->index);
+        if (res == 0)
+                vector_it_destroy(it);
+
+        return res;
+}
+
+static const struct container_callbacks container_cbs = {
+        .first = vector_container_first,
+        .last = vector_container_last,
+        .insert = vector_container_insert,
+        .remove = vector_container_remove
+};
 
 /* API -----------------------------------------------------------------------*/
 
@@ -289,28 +383,13 @@ void *vector_insert(void *vector, unsigned int pos, void *data, int *ret)
                 goto error_args;
         }
 
-        struct meta *meta = vector_to_meta(vector);
-        if (meta->len < pos) {
+        if (vector_to_meta(vector)->len < pos) {
                 res = -ERANGE;
                 goto error_pos;
         }
 
-        vector = set_len(vector, meta->len + 1, &res);
-        if (res < 0)
-                goto error_len;
+        vector = insert_element(vector, pos, data, &res);
 
-        meta = vector_to_meta(vector); /* 'vector' may have changed */
-        char *offset = (char *)vector + pos * meta->ctx.elem_size;
-        /* We substract 2 from the moved size because the length has just been
-         * increased by 1.
-        */
-        memmove(offset + meta->ctx.elem_size,
-                        offset,
-                        (meta->len - pos - 2) * meta->ctx.elem_size);
-        memcpy(offset, data, meta->ctx.elem_size);
-        res = 0;
-        
-error_len:
 error_pos:
 error_args:
         if (ret)
@@ -324,16 +403,10 @@ int vector_remove(void *vector, unsigned int pos)
         if (!vector)
                 return -EINVAL;
 
-        struct meta *meta = vector_to_meta(vector);
-        if (meta->len <= pos)
+        if (vector_to_meta(vector)->len <= pos)
                 return -ERANGE;
 
-        char *offset = (char *)vector + pos * meta->ctx.elem_size;
-        memmove(offset,
-                        offset + meta->ctx.elem_size,
-                        (meta->len - pos - 1) * meta->ctx.elem_size);
-        --meta->len;
-        return 0;
+        return remove_element(vector, pos);
 }
 
 void *vector_reserve(void *vector, size_t count, int *ret)
@@ -373,12 +446,12 @@ error_args:
         return vector;
 }
 
-const struct container *vector_container(const void *vector)
+struct container *vector_container(const void *vector)
 {
         if (!vector)
                 return NULL;
 
-        return (const struct container *)vector_to_meta(vector);
+        return (struct container *)vector_to_meta(vector);
 }
 
 ssize_t vector_len(const void *vector)
