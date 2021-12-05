@@ -60,7 +60,7 @@ static void *set_capacity(void *vector, size_t capacity, int *ret)
         int res;
         
         new_meta = realloc(meta,
-                                sizeof(*meta) + meta->ctx.elem_size * capacity);
+                        sizeof(*meta) + meta->ctx.type->size * capacity);
         if (!new_meta) {
                 res = -ENOMEM;
                 goto error_realloc;
@@ -110,6 +110,21 @@ error_capacity:
         return vector;
 }
 
+char *data_offset(const void *vector, unsigned int pos)
+{
+        return (char *)vector + pos * vector_to_meta(vector)->ctx.type->size;
+}
+
+/**
+ * @brief Inserts 'data' at 'pos' inside 'vector'.
+ * 
+ * @return Pointer to a valid vector, if it was modified or not.
+ * 
+ * @note If 'ret' is not NULL, its value will be modified to indicate if the
+ * operation was successful or not :
+ *      0 on success.
+ *      -ENOMEM on failure.
+ */
 static void *insert_element(
                 void *vector, unsigned int pos, const void *data, int *ret)
 {
@@ -121,14 +136,14 @@ static void *insert_element(
                 goto error_len;
 
         meta = vector_to_meta(vector); /* 'vector' may have changed */
-        char *offset = (char *)vector + pos * meta->ctx.elem_size;
+        const size_t elem_size = meta->ctx.type->size;
+        char *offset = data_offset(vector, pos);
         /* We substract 2 from the moved size because the length has just been
          * increased by 1.
         */
-        memmove(offset + meta->ctx.elem_size,
-                        offset,
-                        (meta->len - pos - 2) * meta->ctx.elem_size);
-        memcpy(offset, data, meta->ctx.elem_size);
+        memmove(offset + elem_size, offset, (meta->len - pos - 2) * elem_size);
+        meta->ctx.type->copy(offset, data, elem_size);
+        
         res = 0;
         
 error_len:
@@ -138,21 +153,22 @@ error_len:
         return vector;
 }
 
-static int remove_element(void *vector, unsigned int pos)
+/**
+ * @brief Removes the element at 'pos' inside 'vector'.
+ */
+static void remove_element(void *vector, unsigned int pos)
 {
         struct meta *meta = vector_to_meta(vector);
+        const size_t elem_size = meta->ctx.type->size;
+        char *offset = data_offset(vector, pos);
 
-        char *offset = (char *)vector + pos * meta->ctx.elem_size;
-        memmove(offset,
-                        offset + meta->ctx.elem_size,
-                        (meta->len - pos - 1) * meta->ctx.elem_size);
+        memmove(offset, offset + elem_size, (meta->len - pos - 1) * elem_size);
         --meta->len;
-        return 0;
 }
 
 static bool it_is_valid(const void *vector, const struct vector_it *it)
 {
-        return (it->vector == vector) 
+        return (it->vector == vector)
                         && (it->index < vector_to_meta(vector)->len);
 }
 
@@ -207,7 +223,7 @@ static const void *vector_it_data(struct iterator *it)
         const struct vector_it *v_it = (const struct vector_it *)it;
         const struct meta *meta = vector_to_meta(v_it->vector);
 
-        return (char *)v_it->vector + v_it->index * meta->ctx.elem_size;
+        return (char *)v_it->vector + v_it->index * meta->ctx.type->size;
 }
 
 static int vector_it_set_data(struct iterator *it, const void *data)
@@ -218,9 +234,10 @@ static int vector_it_set_data(struct iterator *it, const void *data)
         if (v_it->index >= meta->len)
                 return -ERANGE;
 
-        memcpy((char *)v_it->vector + v_it->index * meta->ctx.elem_size,
-                        data,
-                        meta->ctx.elem_size);
+        const size_t elem_size = meta->ctx.type->size;
+        char *offset = data_offset(v_it->vector, v_it->index);
+
+        meta->ctx.type->copy(offset, data, elem_size);
 
         return 0;
 }
@@ -296,11 +313,10 @@ static int vector_container_remove(
         if (!it_is_valid(vector, v_it))
                 return -EINVAL;
 
-        const int res = remove_element(vector, v_it->index);
-        if (res == 0)
-                vector_it_destroy(it);
+        remove_element(vector, v_it->index);
+        vector_it_destroy(it);
 
-        return res;
+        return 0;
 }
 
 static const struct container_callbacks container_cbs = {
@@ -312,14 +328,14 @@ static const struct container_callbacks container_cbs = {
 
 /* API -----------------------------------------------------------------------*/
 
-void *vector_create(size_t elem_size, size_t count)
+void *vector_create(const struct type_info *type, size_t count)
 {
-        struct meta *meta = malloc(sizeof(*meta) + count * elem_size);
+        struct meta *meta = malloc(sizeof(*meta) + count * type->size);
         if (!meta)
                 return NULL;
 
         meta->ctx.cbs = &container_cbs;
-        meta->ctx.elem_size = elem_size;
+        meta->ctx.type = type;
         meta->len = count;
         meta->capacity = count;
 
@@ -348,9 +364,10 @@ void *vector_push(void *vector, void *data, int *ret)
                 goto error_len;
 
         const struct meta *meta = vector_to_meta(vector);
-        memcpy((char *)vector + (meta->len - 1) * meta->ctx.elem_size,
-                        data,
-                        meta->ctx.elem_size);
+        const size_t elem_size = meta->ctx.type->size;
+        char *offset = data_offset(vector, meta->len - 1);
+
+        meta->ctx.type->copy(offset, data, elem_size);
         res = 0;
 
 error_len:
@@ -406,7 +423,8 @@ int vector_remove(void *vector, unsigned int pos)
         if (vector_to_meta(vector)->len <= pos)
                 return -ERANGE;
 
-        return remove_element(vector, pos);
+        remove_element(vector, pos);
+        return 0;
 }
 
 void *vector_reserve(void *vector, size_t count, int *ret)

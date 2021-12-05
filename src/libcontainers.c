@@ -73,7 +73,8 @@ static struct iterator *find_element(
                 goto error_first;
 
         while (iterator_is_valid(it)) {
-                if (memcmp(iterator_data(it), data, ctx->elem_size) == 0)
+                if (ctx->type->comp(
+                                iterator_data(it), data, ctx->type->size) == 0)
                         goto data_found;
                 
                 if (iterator_next(it) < 0)

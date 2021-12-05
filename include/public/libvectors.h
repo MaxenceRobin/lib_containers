@@ -9,19 +9,19 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "libcontainers.h"
+#include "libtypes.h"
 
 #include <stddef.h>
 #include <sys/types.h>
-
 /* API -----------------------------------------------------------------------*/
 
 /**
- * @brief Creates a vector of 'count' elements of size 'elem_size'.
+ * @brief Creates a vector of 'count' elements of 'type'.
  * 
  * @return Pointer to the new vector on success.
  * @return NULL on failure. 
  */
-void *vector_create(size_t elem_size, size_t count);
+void *vector_create(const struct type_info *type, size_t count);
 
 /**
  * @brief Destroys 'vector'.

@@ -10,6 +10,7 @@
 
 #include "libcontainers.h"
 #include "libiterators.h"
+#include "libtypes.h"
 
 #include <stddef.h>
 
@@ -24,7 +25,7 @@ struct container_callbacks {
 
 struct container {
         const struct container_callbacks *cbs;
-        size_t elem_size;
+        const struct type_info *type;
 };
 
 #endif /* LIB_CONTAINERS_PRIVATE_H */
