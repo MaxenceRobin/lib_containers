@@ -314,8 +314,6 @@ static int vector_container_remove(
                 return -EINVAL;
 
         remove_element(vector, v_it->index);
-        vector_it_destroy(it);
-
         return 0;
 }
 

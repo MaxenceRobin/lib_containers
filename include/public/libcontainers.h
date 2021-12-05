@@ -44,7 +44,7 @@ int container_insert(
                 struct container *ctx, struct iterator *it, const void *data);
 
 /**
- * @brief Removes the data pointed by 'it' inside 'ctx', and destroys 'it'.
+ * @brief Removes the data pointed by 'it' inside 'ctx'.
  * 
  * @return 0 on success.
  * @return -ENOTSUP if this operation is not supported.
@@ -54,7 +54,7 @@ int container_insert(
 int container_remove(struct container *ctx, const struct iterator *it);
 
 /**
- * @brief Calls 'cb' with 'data' for each element of 'ctx'.
+ * @brief Calls 'cb' for each element of 'ctx', with 'data' as context.
  * 
  * @param cb : For each call, the element of 'ctx' will be the first argument
  * and 'data' will be the second. It must return 0 on success and a negative
@@ -68,11 +68,12 @@ int container_remove(struct container *ctx, const struct iterator *it);
  */
 int container_for_each(
                 struct container *ctx,
-                int (*cb)(void *, void *),
+                int (*cb)(const void *, void *),
                 void *data);
 
 /**
- * @brief Calls 'cb' with 'data' for each element of 'ctx', in reverse order. 
+ * @brief Calls 'cb' for each element of 'ctx' in reverse order, with 'data' as
+ * context. 
  * 
  * @param cb : For each call, the element of 'ctx' will be the first argument
  * and 'data' will be the second. It must return 0 on success and a negative
@@ -86,7 +87,24 @@ int container_for_each(
  */
 int container_for_each_r(
                 struct container *ctx,
-                int (*cb)(void *, void *),
+                int (*cb)(const void *, void *),
+                void *data);
+
+/**
+ * @brief Filters elements of 'ctx' based on 'cb', with 'data' as context.
+ *  
+ * @param cb : For each call, the element of 'ctx' will be the first argument
+ * and 'data' will be the second. It must return 'true' if the element must be
+ * kept in the container, and 'false' if it must be removed.
+ * 
+ * @return 0 on success.
+ * @return -EINVAL if 'ctx' or 'cb' are invalid.
+ * @return -ENOMEM if the first element failed.
+ * @return A negative errno if the iteration failed.
+ */
+int container_filter(
+                struct container *ctx,
+                bool (*cb)(const void *, void *),
                 void *data);
 
 /**

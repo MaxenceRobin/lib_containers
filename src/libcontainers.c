@@ -29,7 +29,7 @@
  */
 static int for_each(
                 const struct container *ctx,
-                int (*cb)(void *, void *),
+                int (*cb)(const void *, void *),
                 void *data,
                 struct iterator *(*it_get)(const struct container *),
                 int (*it_iterate)(struct iterator *))
@@ -131,7 +131,7 @@ int container_remove(struct container *ctx, const struct iterator *it)
 
 int container_for_each(
                 struct container *ctx,
-                int (*cb)(void *, void *),
+                int (*cb)(const void *, void *),
                 void *data)
 {
         if (!ctx || !cb)
@@ -142,13 +142,44 @@ int container_for_each(
 
 int container_for_each_r(
                 struct container *ctx,
-                int (*cb)(void *, void *),
+                int (*cb)(const void *, void *),
                 void *data)
 {
         if (!ctx || !cb)
                 return -EINVAL;
 
         return for_each(ctx, cb, data, container_last, iterator_previous);
+}
+
+int container_filter(
+                struct container *ctx,
+                bool (*cb)(const void *, void *),
+                void *data)
+{
+        if (!ctx || !cb)
+                return -EINVAL;
+
+        int res;
+        struct iterator *it = container_first(ctx);
+        if (!it) {
+                res = -ENOMEM;
+                goto error_get;
+        }
+
+        while (iterator_is_valid(it)) {
+                res = (cb(iterator_data(it), data) ?
+                                iterator_next(it) : container_remove(ctx, it));
+
+                if (res < 0)
+                        goto error_iterate;
+        }
+
+        res = 0;
+error_iterate:
+error_call:
+        iterator_destroy(it);
+error_get:
+        return res;
 }
 
 struct iterator *container_find(const struct container *ctx, const void *data)
