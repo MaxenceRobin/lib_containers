@@ -197,7 +197,6 @@ static void vector_it_destroy(const struct iterator *it)
 static bool vector_it_is_valid(const struct iterator *it)
 {
         const struct vector_it *v_it = (const struct vector_it *)it;
-
         return it_is_valid(v_it->vector, v_it);
 }
 
@@ -270,7 +269,7 @@ static struct iterator *vector_container_first(const struct container *ctx)
         if (!it)
                 return NULL;
 
-        it->vector = meta_to_vector((struct meta *)ctx);
+        it->vector = meta_to_vector((const struct meta *)ctx);
         it->index = 0;
 
         return (struct iterator *)it;
@@ -299,8 +298,8 @@ static int vector_container_insert(
                 return -EINVAL;
 
         int res;
-
         v_it->vector = insert_element(v_it->vector, v_it->index, data, &res);
+        
         return res;
 }
 
