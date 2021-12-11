@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 #include <sys/types.h>
+
 /* API -----------------------------------------------------------------------*/
 
 /**
@@ -39,7 +40,7 @@ void vector_destroy(const void *vector);
  *      -EINVAL if 'vector' or 'data' are invalid.
  *      -ENOMEM if the value could not be added.
  */
-void *vector_push(void *vector, void *data, int *ret);
+void *vector_push(void *vector, const void *data, int *ret);
 
 /**
  * @brief Removes the last element of 'vector'.
@@ -62,7 +63,7 @@ int vector_pop(void *vector);
  *      -ERANGE if 'pos' is out of bounds.
  *      -ENOMEM if the valud could not be inserted.
  */
-void *vector_insert(void *vector, unsigned int pos, void *data, int *ret);
+void *vector_insert(void *vector, unsigned int pos, const void *data, int *ret);
 
 /**
  * @brief Removes the value at 'pos' inside 'vector'.
@@ -107,7 +108,7 @@ void *vector_fit(void *vector, int *ret);
  * @return Pointer to the container of 'vector' on success.
  * @return NULL if 'vector' is invalid. 
  */
-struct container *vector_container(const void *vector);
+struct container *vector_container(void *vector);
 
 /**
  * @brief Returns the number of elements of 'vector'.

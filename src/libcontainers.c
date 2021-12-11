@@ -36,10 +36,8 @@ static int for_each(
 {
         int res;
         struct iterator *it = it_get(ctx);
-        if (!it) {
-                res = -ENOMEM;
-                goto error_get;
-        }
+        if (!it)
+                return -ENOMEM;
 
         while (iterator_is_valid(it)) {
                 res = cb(iterator_data(it), data);
@@ -55,7 +53,6 @@ static int for_each(
 error_iterate:
 error_call:
         iterator_destroy(it);
-error_get:
         return res;
 }
 
@@ -70,22 +67,19 @@ static struct iterator *find_element(
 {
         struct iterator *it = container_first(ctx);
         if (!it)
-                goto error_first;
+                return NULL;
 
         while (iterator_is_valid(it)) {
                 if (ctx->type->comp(
                                 iterator_data(it), data, ctx->type->size) == 0)
-                        goto data_found;
+                        return it;
                 
                 if (iterator_next(it) < 0)
                         break;
         }
 
         iterator_destroy(it);
-        it = NULL;
-data_found:
-error_first:
-        return it;
+        return NULL;
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -130,7 +124,7 @@ int container_remove(struct container *ctx, const struct iterator *it)
 }
 
 int container_for_each(
-                struct container *ctx,
+                const struct container *ctx,
                 int (*cb)(const void *, void *),
                 void *data)
 {
@@ -141,7 +135,7 @@ int container_for_each(
 }
 
 int container_for_each_r(
-                struct container *ctx,
+                const struct container *ctx,
                 int (*cb)(const void *, void *),
                 void *data)
 {
@@ -151,7 +145,7 @@ int container_for_each_r(
         return for_each(ctx, cb, data, container_last, iterator_previous);
 }
 
-int container_filter(
+int container_remove_if(
                 struct container *ctx,
                 bool (*cb)(const void *, void *),
                 void *data)
@@ -161,14 +155,12 @@ int container_filter(
 
         int res;
         struct iterator *it = container_first(ctx);
-        if (!it) {
-                res = -ENOMEM;
-                goto error_get;
-        }
+        if (!it)
+                return -ENOMEM;
 
         while (iterator_is_valid(it)) {
                 res = (cb(iterator_data(it), data) ?
-                                iterator_next(it) : container_remove(ctx, it));
+                                container_remove(ctx, it) : iterator_next(it));
 
                 if (res < 0)
                         goto error_iterate;
@@ -176,9 +168,7 @@ int container_filter(
 
         res = 0;
 error_iterate:
-error_call:
         iterator_destroy(it);
-error_get:
         return res;
 }
 

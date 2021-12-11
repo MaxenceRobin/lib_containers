@@ -168,8 +168,8 @@ static void remove_element(void *vector, unsigned int pos)
 
 static bool it_is_valid(const void *vector, const struct vector_it *it)
 {
-        return (it->vector == vector)
-                        && (it->index < vector_to_meta(vector)->len);
+        return (it->vector == vector
+                        && it->index < vector_to_meta(vector)->len);
 }
 
 /* Iterator implementation -----------*/
@@ -214,12 +214,13 @@ static int vector_it_previous(struct iterator *it)
         return 0;
 }
 
-static const void *vector_it_data(struct iterator *it)
+static const void *vector_it_data(const struct iterator *it)
 {
-        if (!vector_it_is_valid(it))
+        const struct vector_it *v_it = (const struct vector_it *)it;
+
+        if (!it_is_valid(v_it->vector, v_it))
                 return NULL;
 
-        const struct vector_it *v_it = (const struct vector_it *)it;
         const struct meta *meta = vector_to_meta(v_it->vector);
 
         return (char *)v_it->vector + v_it->index * meta->ctx.type->size;
@@ -233,11 +234,9 @@ static int vector_it_set_data(struct iterator *it, const void *data)
         if (v_it->index >= meta->len)
                 return -ERANGE;
 
-        const size_t elem_size = meta->ctx.type->size;
         char *offset = data_offset(v_it->vector, v_it->index);
 
-        meta->ctx.type->copy(offset, data, elem_size);
-
+        meta->ctx.type->copy(offset, data, meta->ctx.type->size);
         return 0;
 }
 
@@ -327,6 +326,9 @@ static const struct container_callbacks container_cbs = {
 
 void *vector_create(const struct type_info *type, size_t count)
 {
+        if (!type)
+                return NULL;
+
         struct meta *meta = malloc(sizeof(*meta) + count * type->size);
         if (!meta)
                 return NULL;
@@ -347,7 +349,7 @@ void vector_destroy(const void *vector)
         free(vector_to_meta(vector));
 }
 
-void *vector_push(void *vector, void *data, int *ret)
+void *vector_push(void *vector, const void *data, int *ret)
 {
         int res;
 
@@ -388,7 +390,7 @@ int vector_pop(void *vector)
         return 0;
 }
 
-void *vector_insert(void *vector, unsigned int pos, void *data, int *ret)
+void *vector_insert(void *vector, unsigned int pos, const void *data, int *ret)
 {
         int res;
 
@@ -461,12 +463,12 @@ error_args:
         return vector;
 }
 
-struct container *vector_container(const void *vector)
+struct container *vector_container(void *vector)
 {
         if (!vector)
                 return NULL;
 
-        return (struct container *)vector_to_meta(vector);
+        return &vector_to_meta(vector)->ctx;
 }
 
 ssize_t vector_len(const void *vector)

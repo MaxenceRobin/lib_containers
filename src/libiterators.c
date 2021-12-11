@@ -73,7 +73,7 @@ int iterator_set_data(struct iterator *it, const void *data)
         if (!it || !data)
                 return -EINVAL;
 
-        if (!it->cbs || it->cbs->set_data)
+        if (!it->cbs || !it->cbs->set_data)
                 return -ENOTSUP;
 
         return it->cbs->set_data(it, data);
