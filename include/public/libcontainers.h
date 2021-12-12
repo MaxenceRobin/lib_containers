@@ -67,8 +67,8 @@ int container_remove(struct container *ctx, const struct iterator *it);
  * @return A custom negative errno if a call to 'cb' failed.
  */
 int container_for_each(
-                const struct container *ctx,
-                int (*cb)(const void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data);
 
 /**
@@ -86,8 +86,8 @@ int container_for_each(
  * @return A custom negative errno if a call to 'cb' failed.
  */
 int container_for_each_r(
-                const struct container *ctx,
-                int (*cb)(const void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data);
 
 /**

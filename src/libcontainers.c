@@ -28,8 +28,8 @@
  * @warning 'cb' MUST return a negative errno on failure, and 0 on success.
  */
 static int for_each(
-                const struct container *ctx,
-                int (*cb)(const void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data,
                 struct iterator *(*it_get)(const struct container *),
                 int (*it_iterate)(struct iterator *))
@@ -40,7 +40,7 @@ static int for_each(
                 return -ENOMEM;
 
         while (iterator_is_valid(it)) {
-                res = cb(iterator_data(it), data);
+                res = cb(it, data);
                 if (res < 0)
                         goto error_call;
 
@@ -124,8 +124,8 @@ int container_remove(struct container *ctx, const struct iterator *it)
 }
 
 int container_for_each(
-                const struct container *ctx,
-                int (*cb)(const void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data)
 {
         if (!ctx || !cb)
@@ -135,8 +135,8 @@ int container_for_each(
 }
 
 int container_for_each_r(
-                const struct container *ctx,
-                int (*cb)(const void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data)
 {
         if (!ctx || !cb)
