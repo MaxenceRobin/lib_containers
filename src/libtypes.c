@@ -15,12 +15,22 @@
 static struct type_info info_##name = { \
         .size = sizeof(type), \
         .copy = memcpy, \
-        .comp = memcmp \
+        .comp = memcmp, \
+        .destroy = default_destroy \
 }; \
 \
 const struct type_info *type_##name() \
 { \
         return &info_##name; \
+}
+
+/* Static functions ----------------------------------------------------------*/
+
+/**
+ * @brief The default destruction behavior is to do nothing
+ */
+static void default_destroy(void *data)
+{
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -43,3 +53,18 @@ DECL_TYPE(ulong_long, unsigned long long)
 DECL_TYPE(float, float)
 DECL_TYPE(double, double)
 DECL_TYPE(long_double, long double)
+
+void *(*type_default_copy())(void *, const void *, size_t)
+{
+        return memcpy;
+}
+
+int (*type_default_comp())(const void *, const void *, size_t)
+{
+        return memcmp;
+}
+
+void (*type_default_destroy())(void *)
+{
+        return default_destroy;
+}

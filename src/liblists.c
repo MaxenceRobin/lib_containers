@@ -39,7 +39,7 @@ struct list_it {
 
 /**
  * @brief Inserts an empty node of 'list' after 'previous' containing 'value'.
- * 
+ *
  * @return Pointer to the created node on success.
  * @return NULL on failure.
  */
@@ -72,6 +72,7 @@ static struct node *insert_node(
 
 static void destroy_node(const struct node *node)
 {
+        node->head->ctx.type->destroy(node->data);
         free(node->data);
         free((struct node *)node);
 }

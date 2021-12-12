@@ -16,13 +16,13 @@
 
 /**
  * @brief Calls 'cb' with 'data' for each element of 'ctx', starting with the
- * element given by 'it_get' and iterating using 'it_iterate'. 
- * 
+ * element given by 'it_get' and iterating using 'it_iterate'.
+ *
  * @return 0 on success.
  * @return -ENOMEM if 'it_get' failed.
  * @return A negative errno if the iteration failed.
  * @return A custom negative errno if a call to 'cb' failed.
- * 
+ *
  * @note For each call to 'cb', the element of 'ctx' will be the first argument
  * and 'data' will be the second.
  * @warning 'cb' MUST return a negative errno on failure, and 0 on success.
@@ -58,9 +58,9 @@ error_call:
 
 /**
  * @brief Finds 'data' inside 'ctx'.
- * 
+ *
  * @return An iterator over the found data on success.
- * @return NULL on failure. 
+ * @return NULL on failure.
  */
 static struct iterator *find_element(
                 const struct container *ctx, const void *data)
@@ -73,7 +73,7 @@ static struct iterator *find_element(
                 if (ctx->type->comp(
                                 iterator_data(it), data, ctx->type->size) == 0)
                         return it;
-                
+
                 if (iterator_next(it) < 0)
                         break;
         }
