@@ -110,7 +110,7 @@ error_capacity:
         return vector;
 }
 
-char *data_offset(const void *vector, unsigned int pos)
+static char *data_offset(const void *vector, unsigned int pos)
 {
         return (char *)vector + pos * vector_to_meta(vector)->ctx.type->size;
 }
