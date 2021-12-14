@@ -24,7 +24,7 @@ struct buffer;
  * @brief Creates a new buffer of 'count' elements of type 'type'.
  *
  * @return Pointer to the new buffer on success.
- * @return NULL on failure.
+ * @return NULL if 'type' is invalid or 'count' is 0.
  */
 struct buffer *buffer_create(const struct type_info *type, size_t count);
 
@@ -41,6 +41,15 @@ void buffer_destroy(const struct buffer *buffer);
  * @return -ENOBUFS if 'buffer' is full.
  */
 int buffer_push(struct buffer *buffer, const void *data);
+
+/**
+ * @brief Adds 'data' info 'buffer', and overwrite the last value if 'buffer' is
+ * already full.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'buffer' or 'data' are invalid.
+ */
+int buffer_f_push(struct buffer *buffer, const void *data);
 
 /**
  * @brief Removes the first value of 'buffer'.

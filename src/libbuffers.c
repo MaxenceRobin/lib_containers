@@ -38,11 +38,21 @@ static char *data_offset(const struct buffer *buffer, unsigned int pos)
         return (char *)buffer + meta->type->size * pos;
 }
 
+static void push_value(struct buffer *buffer, const void *data)
+{
+        struct meta *meta = buffer_to_meta(buffer);
+        char *offset = data_offset(buffer, meta->write);
+        meta->type->copy(offset, data, meta->type->size);
+
+        meta->write = (meta->write + 1) % meta->count;
+        meta->status = (meta->write == meta->read) ? BUFFER_FULL : BUFFER_NONE;
+}
+
 /* API -----------------------------------------------------------------------*/
 
 struct buffer *buffer_create(const struct type_info *type, size_t count)
 {
-        if (!type)
+        if (!type || count == 0)
                 return NULL;
 
         struct meta *meta = malloc(sizeof(*meta) + type->size * count);
@@ -80,12 +90,20 @@ int buffer_push(struct buffer *buffer, const void *data)
         if (meta->status == BUFFER_FULL)
                 return -ENOBUFS;
 
-        char *offset = data_offset(buffer, meta->write);
-        meta->type->copy(offset, data, meta->type->size);
+        push_value(buffer, data);
+        return 0;
+}
 
-        meta->write = (meta->write + 1) % meta->count;
-        meta->status = (meta->write == meta->read) ? BUFFER_FULL : BUFFER_NONE;
+int buffer_f_push(struct buffer *buffer, const void *data)
+{
+        if (!buffer || !data)
+                return -EINVAL;
 
+        struct meta *meta = buffer_to_meta(buffer);
+        if (meta->status == BUFFER_FULL)
+                meta->read = (meta->read + 1) % meta->count;
+
+        push_value(buffer, data);
         return 0;
 }
 
