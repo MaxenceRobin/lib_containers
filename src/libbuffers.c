@@ -38,14 +38,27 @@ static char *data_offset(const struct buffer *buffer, unsigned int pos)
         return (char *)buffer + meta->type->size * pos;
 }
 
-static void push_value(struct buffer *buffer, const void *data)
+/**
+ * @brief Adds 'data' to 'buffer'.
+ *
+ * @return 0 or ENOBUFS, respectively if 'buffer' is not full or if 'buffer' is
+ * full after this call.
+ */
+static int push_value(struct buffer *buffer, const void *data)
 {
         struct meta *meta = buffer_to_meta(buffer);
         char *offset = data_offset(buffer, meta->write);
-        meta->type->copy(offset, data, meta->type->size);
 
+        meta->type->copy(offset, data, meta->type->size);
         meta->write = (meta->write + 1) % meta->count;
-        meta->status = (meta->write == meta->read) ? BUFFER_FULL : BUFFER_NONE;
+
+        if (meta->write == meta->read) {
+                meta->status = BUFFER_FULL;
+                return ENOBUFS;
+        }
+
+        meta->status = BUFFER_NONE;
+        return 0;
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -90,8 +103,7 @@ int buffer_push(struct buffer *buffer, const void *data)
         if (meta->status == BUFFER_FULL)
                 return -ENOBUFS;
 
-        push_value(buffer, data);
-        return 0;
+        return push_value(buffer, data);
 }
 
 int buffer_f_push(struct buffer *buffer, const void *data)
@@ -103,8 +115,7 @@ int buffer_f_push(struct buffer *buffer, const void *data)
         if (meta->status == BUFFER_FULL)
                 meta->read = (meta->read + 1) % meta->count;
 
-        push_value(buffer, data);
-        return 0;
+        return push_value(buffer, data);
 }
 
 int buffer_pop(struct buffer *buffer)
@@ -117,10 +128,14 @@ int buffer_pop(struct buffer *buffer)
                 return -ENOMEM;
 
         meta->type->destroy(data_offset(buffer, meta->read));
-
         meta->read = (meta->read + 1) % meta->count;
-        meta->status = (meta->read == meta->write) ? BUFFER_EMPTY : BUFFER_NONE;
 
+        if (meta->read == meta->write) {
+                meta->status = BUFFER_EMPTY;
+                return ENOMEM;
+        }
+
+        meta->status = BUFFER_NONE;
         return 0;
 }
 

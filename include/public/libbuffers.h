@@ -36,7 +36,8 @@ void buffer_destroy(const struct buffer *buffer);
 /**
  * @brief Adds 'data' into 'buffer'.
  *
- * @return 0 on success.
+ * @return 0 or ENOBUFS on success, respectively if 'buffer' is not full or if
+ * 'buffer' is full after this call.
  * @return -EINVAL if 'buffer' or 'data' are invalid.
  * @return -ENOBUFS if 'buffer' is full.
  */
@@ -46,7 +47,8 @@ int buffer_push(struct buffer *buffer, const void *data);
  * @brief Adds 'data' info 'buffer', and overwrite the last value if 'buffer' is
  * already full.
  *
- * @return 0 on success.
+ * @return 0 or ENOBUFS on success, respectively if 'buffer' is not full or if
+ * 'buffer' is full after this call.
  * @return -EINVAL if 'buffer' or 'data' are invalid.
  */
 int buffer_f_push(struct buffer *buffer, const void *data);
@@ -54,7 +56,8 @@ int buffer_f_push(struct buffer *buffer, const void *data);
 /**
  * @brief Removes the first value of 'buffer'.
  *
- * @return 0 on success.
+ * @return 0 or ENOMEM on success, respectively if 'buffer' is not empty or if
+ * 'buffer' is empty after this call.
  * @return -EINVAL if 'buffer' is invalid.
  * @return -ENOMEM if 'buffer' is empty.
  */
