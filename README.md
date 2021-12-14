@@ -44,12 +44,11 @@ static int increase(void *data, void *ctx)
         return 0;
 }
 
-static int reset(void *data, void *ctx)
+bool filter_even(void *data, void *ctx)
 {
         int *value = data;
 
-        *value = 0;
-        return 0;
+        return (*value & 0x1);
 }
 
 int main()
@@ -89,7 +88,7 @@ int main()
         container_for_each_r(ctx, increase, &(int){0});
         print_vector(vector);
 
-        container_for_each(ctx, reset, NULL);
+        container_filter(ctx, filter_even, NULL);
         print_vector(vector);
 
         vector_destroy(vector);
@@ -135,7 +134,7 @@ len = 12
 capacity = 12
 [ 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 ]
 
-len = 12
+len = 6
 capacity = 12
-[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+[ 11, 9, 7, 5, 3, 1 ]
 ```

@@ -10,38 +10,37 @@
 
 #include <errno.h>
 #include <stddef.h>
+#include <string.h>
 
 /* Static functions ----------------------------------------------------------*/
 
 /**
  * @brief Calls 'cb' with 'data' for each element of 'ctx', starting with the
- * element given by 'it_get' and iterating using 'it_iterate'. 
- * 
+ * element given by 'it_get' and iterating using 'it_iterate'.
+ *
  * @return 0 on success.
  * @return -ENOMEM if 'it_get' failed.
  * @return A negative errno if the iteration failed.
  * @return A custom negative errno if a call to 'cb' failed.
- * 
+ *
  * @note For each call to 'cb', the element of 'ctx' will be the first argument
  * and 'data' will be the second.
  * @warning 'cb' MUST return a negative errno on failure, and 0 on success.
  */
 static int for_each(
-                const struct container *ctx,
-                int (*cb)(void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data,
                 struct iterator *(*it_get)(const struct container *),
                 int (*it_iterate)(struct iterator *))
 {
         int res;
         struct iterator *it = it_get(ctx);
-        if (!it) {
-                res = -ENOMEM;
-                goto error_get;
-        }
+        if (!it)
+                return -ENOMEM;
 
         while (iterator_is_valid(it)) {
-                res = cb(iterator_data(it), data);
+                res = cb(it, data);
                 if (res < 0)
                         goto error_call;
 
@@ -54,8 +53,33 @@ static int for_each(
 error_iterate:
 error_call:
         iterator_destroy(it);
-error_get:
         return res;
+}
+
+/**
+ * @brief Finds 'data' inside 'ctx'.
+ *
+ * @return An iterator over the found data on success.
+ * @return NULL on failure.
+ */
+static struct iterator *find_element(
+                const struct container *ctx, const void *data)
+{
+        struct iterator *it = container_first(ctx);
+        if (!it)
+                return NULL;
+
+        while (iterator_is_valid(it)) {
+                if (ctx->type->comp(
+                                iterator_data(it), data, ctx->type->size) == 0)
+                        return it;
+
+                if (iterator_next(it) < 0)
+                        break;
+        }
+
+        iterator_destroy(it);
+        return NULL;
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -76,9 +100,32 @@ struct iterator *container_last(const struct container *ctx)
         return ctx->cbs->last(ctx);
 }
 
+int container_insert(
+                struct container *ctx, struct iterator *it, const void *data)
+{
+        if (!ctx || !it || !data)
+                return -EINVAL;
+
+        if (!ctx->cbs || !ctx->cbs->insert)
+                return -ENOTSUP;
+
+        return ctx->cbs->insert(ctx, it, data);
+}
+
+int container_remove(struct container *ctx, const struct iterator *it)
+{
+        if (!ctx || !it)
+                return -EINVAL;
+
+        if (!ctx->cbs || !ctx->cbs->remove)
+                return -ENOTSUP;
+
+        return ctx->cbs->remove(ctx, it);
+}
+
 int container_for_each(
-                const struct container *ctx,
-                int (*cb)(void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data)
 {
         if (!ctx || !cb)
@@ -88,12 +135,60 @@ int container_for_each(
 }
 
 int container_for_each_r(
-                const struct container *ctx,
-                int (*cb)(void *, void *),
+                struct container *ctx,
+                int (*cb)(struct iterator *, void *),
                 void *data)
 {
         if (!ctx || !cb)
                 return -EINVAL;
 
         return for_each(ctx, cb, data, container_last, iterator_previous);
+}
+
+int container_remove_if(
+                struct container *ctx,
+                bool (*cb)(const void *, void *),
+                void *data)
+{
+        if (!ctx || !cb)
+                return -EINVAL;
+
+        int res;
+        struct iterator *it = container_first(ctx);
+        if (!it)
+                return -ENOMEM;
+
+        while (iterator_is_valid(it)) {
+                res = (cb(iterator_data(it), data) ?
+                                container_remove(ctx, it) : iterator_next(it));
+
+                if (res < 0)
+                        goto error_iterate;
+        }
+
+        res = 0;
+error_iterate:
+        iterator_destroy(it);
+        return res;
+}
+
+struct iterator *container_find(const struct container *ctx, const void *data)
+{
+        if (!ctx || !data)
+                return NULL;
+
+        return find_element(ctx, data);
+}
+
+bool container_contains(const struct container *ctx, const void *data)
+{
+        if (!ctx || !data)
+                return false;
+
+        const struct iterator *it = find_element(ctx, data);
+        if (!it)
+                return false;
+
+        iterator_destroy(it);
+        return true;
 }

@@ -6,8 +6,11 @@ project(libcontainers)
 set(TARGET_NAME containers)
 
 set(SOURCES
+        src/libbuffers.c
         src/libcontainers.c
         src/libiterators.c
+        src/liblists.c
+        src/libtypes.c
         src/libvectors.c
 )
 

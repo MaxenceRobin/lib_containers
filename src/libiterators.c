@@ -60,10 +60,21 @@ int iterator_previous(struct iterator *it)
         return it->cbs->previous(it);
 }
 
-void *iterator_data(struct iterator *it)
+const void *iterator_data(struct iterator *it)
 {
         if (!it || !it->cbs || !it->cbs->data)
                 return NULL;
 
         return it->cbs->data(it);
+}
+
+int iterator_set_data(struct iterator *it, const void *data)
+{
+        if (!it || !data)
+                return -EINVAL;
+
+        if (!it->cbs || !it->cbs->set_data)
+                return -ENOTSUP;
+
+        return it->cbs->set_data(it, data);
 }
