@@ -8,7 +8,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libcontainers.h"
 #include "libtypes.h"
 
 #include <sys/types.h>
@@ -67,14 +66,6 @@ int list_pop_front(struct list *list);
  * @return -ENOMEM on failure.
  */
 int list_pop_back(struct list *list);
-
-/**
- * @brief Returns the associated container of 'list'.
- *
- * @return Pointer to the container of 'list' on success.
- * @return NULL if 'list' is invalid.
- */
-struct container *list_container(struct list *list);
 
 /**
  * @brief Returns the number of elements inside 'list'.

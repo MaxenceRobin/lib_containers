@@ -8,7 +8,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libcontainers.h"
 #include "libtypes.h"
 
 #include <stddef.h>
@@ -101,14 +100,6 @@ void *vector_reserve(void *vector, size_t count, int *ret);
  *      -ENOMEM if the reallocation failed.
  */
 void *vector_fit(void *vector, int *ret);
-
-/**
- * @brief Returns the associated container of 'vector'.
- *
- * @return Pointer to the container of 'vector' on success.
- * @return NULL if 'vector' is invalid.
- */
-struct container *vector_container(void *vector);
 
 /**
  * @brief Returns the number of elements of 'vector'.
