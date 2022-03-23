@@ -12,6 +12,10 @@
 
 /* Definitions ---------------------------------------------------------------*/
 
+typedef void *(*type_copy_cb)(void *, const void *, size_t);
+typedef int (*type_comp_cb)(const void *, const void *, size_t);
+typedef void (*type_destroy_cb)(void *);
+
 /**
  * @brief Callbacks for types manipulation.
  *
@@ -27,9 +31,9 @@
  */
 struct type_info {
         size_t size;
-        void *(*copy)(void *, const void *, size_t);
-        int (*comp)(const void *, const void *, size_t);
-        void (*destroy)(void *);
+        type_copy_cb copy;
+        type_comp_cb comp;
+        type_destroy_cb destroy;
 };
 
 /* API -----------------------------------------------------------------------*/
@@ -56,16 +60,16 @@ const struct type_info *type_long_double();
 /**
  * @brief Returns a default copy function.
  */
-void *(*type_default_copy())(void *, const void *, size_t);
+type_copy_cb type_default_copy();
 
 /**
  * @brief Returns a default comp function.
  */
-int (*type_default_comp())(const void *, const void *, size_t);
+type_comp_cb type_default_comp();
 
 /**
  * @brief Returns a default destroy function.
  */
-void (*type_default_destroy())(void *);
+type_destroy_cb type_default_destroy();
 
 #endif /* LIB_TYPES_H */
