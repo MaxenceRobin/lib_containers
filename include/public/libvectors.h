@@ -60,7 +60,7 @@ int vector_pop(void *vector);
  *      0 on success.
  *      -EINVAL if 'vector' or 'data' are invalid.
  *      -ERANGE if 'pos' is out of bounds.
- *      -ENOMEM if the valud could not be inserted.
+ *      -ENOMEM if the value could not be inserted.
  */
 void *vector_insert(void *vector, unsigned int pos, const void *data, int *ret);
 
@@ -72,6 +72,28 @@ void *vector_insert(void *vector, unsigned int pos, const void *data, int *ret);
  * @return -ERANGE if 'pos' is out of bounds.
  */
 int vector_remove(void *vector, unsigned int pos);
+
+/**
+ * @brief Modifies the length of 'vector' to 'size' elements, reallocating
+ * 'vector' if needed.
+ *
+ * @return Pointer to a valid vector, if it was modified or not.
+ *
+ * @note If 'ret' is not NULL, its value will be modified to indicate if the
+ * operation was successful or not :
+ *      0 on success.
+ *      -EINVAL if 'vector' is invalid.
+ *      -ENOMEM if 'vector' could not be resized.
+ */
+void *vector_resize(void *vector, size_t size, int *ret);
+
+/**
+ * @brief Removes all elements from 'vector".
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'vector' is invalid.
+ */
+int vector_clear(void *vector);
 
 /**
  * @brief Allocates enough memory for 'vector' to contain 'count' elements
