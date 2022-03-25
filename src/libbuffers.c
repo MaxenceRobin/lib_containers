@@ -61,6 +61,18 @@ static int push_value(struct buffer *buffer, const void *data)
         return 0;
 }
 
+static void destroy_values(const struct buffer *buffer)
+{
+        struct meta *meta = buffer_to_meta(buffer);
+        if (meta->status == BUFFER_EMPTY)
+                return;
+
+        for (unsigned int i = meta->read;
+                        i != meta->write;
+                        i = (i + 1) % meta->count)
+                meta->type->destroy(data_offset(buffer, i));
+}
+
 /* API -----------------------------------------------------------------------*/
 
 struct buffer *buffer_create(const struct type_info *type, size_t count)
@@ -86,12 +98,8 @@ void buffer_destroy(const struct buffer *buffer)
         if (!buffer)
                 return;
 
-        struct meta *meta = buffer_to_meta(buffer);
-
-        for (unsigned int i = 0; i < meta->count; ++i)
-                meta->type->destroy(data_offset(buffer, i));
-
-        free(meta);
+        destroy_values(buffer);
+        free(buffer_to_meta(buffer));
 }
 
 int buffer_push(struct buffer *buffer, const void *data)
@@ -139,7 +147,20 @@ int buffer_pop(struct buffer *buffer)
         return 0;
 }
 
-const void *buffer_data(const struct buffer *buffer)
+int buffer_clear(struct buffer *buffer)
+{
+        if (!buffer)
+                return -EINVAL;
+
+        destroy_values(buffer);
+        struct meta *meta = buffer_to_meta(buffer);
+        meta->read = meta->write;
+        meta->status = BUFFER_EMPTY;
+
+        return 0;
+}
+
+void *buffer_data(const struct buffer *buffer)
 {
         if (!buffer)
                 return NULL;

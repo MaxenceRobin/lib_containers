@@ -64,12 +64,20 @@ int buffer_f_push(struct buffer *buffer, const void *data);
 int buffer_pop(struct buffer *buffer);
 
 /**
+ * @brief Clears 'buffer'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'buffer' is invalid.
+ */
+int buffer_clear(struct buffer *buffer);
+
+/**
  * @brief Returns the last value of 'buffer'.
  *
  * @return Pointer to the value on success.
  * @return NULL if 'buffer' is invalid or if 'buffer' is empty.
  */
-const void *buffer_data(const struct buffer *buffer);
+void *buffer_data(const struct buffer *buffer);
 
 /**
  * @brief Indicates if 'buffer' is empty.
