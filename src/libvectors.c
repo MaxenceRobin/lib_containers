@@ -132,10 +132,8 @@ static void *insert_element(
         meta = vector_to_meta(vector); /* 'vector' may have changed */
         const size_t elem_size = meta->type->size;
         char *offset = data_offset(vector, pos);
-        /* We substract 2 from the moved size because the length has just been
-         * increased by 1.
-        */
-        memmove(offset + elem_size, offset, (meta->len - pos - 2) * elem_size);
+
+        memmove(offset + elem_size, offset, (meta->len - pos - 1) * elem_size);
         meta->type->copy(offset, data, elem_size);
 
         res = 0;
