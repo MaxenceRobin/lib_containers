@@ -286,6 +286,16 @@ error_args:
         return vector;
 }
 
+int vector_sort(void *vector)
+{
+        if (!vector)
+                return -EINVAL;
+
+        const struct meta *meta = vector_to_meta(vector);
+        qsort(vector, meta->len, meta->type->size, meta->type->comp);
+        return 0;
+}
+
 int vector_clear(void *vector)
 {
         if (!vector)

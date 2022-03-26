@@ -88,6 +88,14 @@ int vector_remove(void *vector, unsigned int pos);
 void *vector_resize(void *vector, size_t size, int *ret);
 
 /**
+ * @brief Sorts 'vector' in ascending order.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'vector' is invalid.
+ */
+int vector_sort(void *vector);
+
+/**
  * @brief Removes all elements from 'vector".
  *
  * @return 0 on success.
