@@ -7,15 +7,24 @@
 
 #include "libtypes.h"
 
-#include <string.h>
-
 /* Definitions ---------------------------------------------------------------*/
 
 #define DECL_TYPE(name, type) \
+\
+static void *copy_##name(void *dest, const void *src) \
+{ \
+        *((type *)dest) = *((type *)src); \
+} \
+\
+static int comp_##name(const void *first, const void *second) \
+{ \
+        return *((type *)first) - *((type *)second); \
+} \
+\
 static struct type_info info_##name = { \
         .size = sizeof(type), \
-        .copy = memcpy, \
-        .comp = memcmp, \
+        .copy = copy_##name, \
+        .comp = comp_##name, \
         .destroy = default_destroy \
 }; \
 \
@@ -54,17 +63,7 @@ DECL_TYPE(float, float)
 DECL_TYPE(double, double)
 DECL_TYPE(long_double, long double)
 
-void *(*type_default_copy())(void *, const void *, size_t)
-{
-        return memcpy;
-}
-
-int (*type_default_comp())(const void *, const void *, size_t)
-{
-        return memcmp;
-}
-
-void (*type_default_destroy())(void *)
+type_destroy_cb type_default_destroy()
 {
         return default_destroy;
 }

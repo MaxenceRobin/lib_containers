@@ -134,7 +134,7 @@ static void *insert_element(
         char *offset = data_offset(vector, pos);
 
         memmove(offset + elem_size, offset, (meta->len - pos - 1) * elem_size);
-        meta->type->copy(offset, data, elem_size);
+        meta->type->copy(offset, data);
 
         res = 0;
 error_len:
@@ -210,7 +210,7 @@ void *vector_push(void *vector, const void *data, int *ret)
         const size_t elem_size = meta->type->size;
         char *offset = data_offset(vector, meta->len - 1);
 
-        meta->type->copy(offset, data, elem_size);
+        meta->type->copy(offset, data);
         res = 0;
 error_len:
 error_args:

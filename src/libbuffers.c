@@ -49,7 +49,7 @@ static int push_value(struct buffer *buffer, const void *data)
         struct meta *meta = buffer_to_meta(buffer);
         char *offset = data_offset(buffer, meta->write);
 
-        meta->type->copy(offset, data, meta->type->size);
+        meta->type->copy(offset, data);
         meta->write = (meta->write + 1) % meta->count;
 
         if (meta->write == meta->read) {

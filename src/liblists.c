@@ -59,7 +59,7 @@ static struct node *insert_node(
         node->next->previous = node;
         node->previous->next = node;
 
-        list->type->copy(node->data, value, list->type->size);
+        list->type->copy(node->data, value);
         ++list->len;
 
         return node;
