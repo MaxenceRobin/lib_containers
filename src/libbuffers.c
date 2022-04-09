@@ -12,7 +12,7 @@
 
 /* Definitions ---------------------------------------------------------------*/
 
-struct meta {
+struct buffer {
         const struct type_info *type;
         size_t count;
         unsigned int read;
@@ -22,56 +22,42 @@ struct meta {
 
 /* Static functions ----------------------------------------------------------*/
 
-static struct meta *buffer_to_meta(const struct buffer *buffer)
+static char *data_offset(const struct buffer *buffer, unsigned int pos)
 {
-        return buffer ?
-                (struct meta *)buffer - 1
-                : NULL;
-}
-
-static struct buffer *meta_to_buffer(const struct meta *meta)
-{
-        return meta ?
-                (struct buffer *)(meta + 1)
-                : NULL;
-}
-
-static char *data_offset(const struct meta *meta, unsigned int pos)
-{
-        return (char *)meta_to_buffer(meta) + meta->type->size * pos;
+        return (char *)(buffer + 1) + buffer->type->size * pos;
 }
 
 /**
- * @brief Adds 'data' to 'meta'.
+ * @brief Adds 'data' to 'buffer'.
  *
- * @return 0 or ENOBUFS, respectively if 'meta' is not full or if 'meta' is
+ * @return 0 or ENOBUFS, respectively if 'buffer' is not full or if 'buffer' is
  * full after this call.
  */
-static int push_value(struct meta *meta, const void *data)
+static int push_value(struct buffer *buffer, const void *data)
 {
-        char *offset = data_offset(meta, meta->write);
+        char *offset = data_offset(buffer, buffer->write);
 
-        meta->type->copy(offset, data);
-        meta->write = (meta->write + 1) % meta->count;
+        buffer->type->copy(offset, data);
+        buffer->write = (buffer->write + 1) % buffer->count;
 
-        if (meta->write == meta->read) {
-                meta->status = BUFFER_FULL;
+        if (buffer->write == buffer->read) {
+                buffer->status = BUFFER_FULL;
                 return ENOBUFS;
         }
 
-        meta->status = BUFFER_NONE;
+        buffer->status = BUFFER_NONE;
         return 0;
 }
 
-static void destroy_values(const struct meta *meta)
+static void destroy_values(const struct buffer *buffer)
 {
-        if (meta->status == BUFFER_EMPTY)
+        if (buffer->status == BUFFER_EMPTY)
                 return;
 
-        for (unsigned int i = meta->read;
-                        i != meta->write;
-                        i = (i + 1) % meta->count)
-                meta->type->destroy(data_offset(meta, i));
+        for (unsigned int i = buffer->read;
+                        i != buffer->write;
+                        i = (i + 1) % buffer->count)
+                buffer->type->destroy(data_offset(buffer, i));
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -81,122 +67,113 @@ struct buffer *buffer_create(const struct type_info *type, size_t count)
         if (!type || count == 0)
                 return NULL;
 
-        struct meta *meta = malloc(sizeof(*meta) + type->size * count);
-        if (!meta)
+        struct buffer *buffer = malloc(sizeof(*buffer) + type->size * count);
+        if (!buffer)
                 return NULL;
 
-        meta->type = type;
-        meta->count = count;
-        meta->read = 0;
-        meta->write = 0;
-        meta->status = BUFFER_EMPTY;
+        buffer->type = type;
+        buffer->count = count;
+        buffer->read = 0;
+        buffer->write = 0;
+        buffer->status = BUFFER_EMPTY;
 
-        return meta_to_buffer(meta);
+        return buffer;
 }
 
 void buffer_destroy(const struct buffer *buffer)
 {
-        struct meta *meta = buffer_to_meta(buffer);
-        if (!meta)
+        if (!buffer)
                 return;
 
-        destroy_values(meta);
-        free(meta);
+        destroy_values(buffer);
+        free((void *)buffer);
 }
 
 int buffer_push(struct buffer *buffer, const void *data)
 {
-        struct meta *meta = buffer_to_meta(buffer);
-        if (!meta || !data)
+        if (!buffer || !data)
                 return -EINVAL;
 
-        if (meta->status == BUFFER_FULL)
+        if (buffer->status == BUFFER_FULL)
                 return -ENOBUFS;
 
-        return push_value(meta, data);
+        return push_value(buffer, data);
 }
 
 int buffer_f_push(struct buffer *buffer, const void *data)
 {
-        struct meta *meta = buffer_to_meta(buffer);
-        if (!meta || !data)
+        if (!buffer || !data)
                 return -EINVAL;
 
-        if (meta->status == BUFFER_FULL)
-                meta->read = (meta->read + 1) % meta->count;
+        if (buffer->status == BUFFER_FULL)
+                buffer->read = (buffer->read + 1) % buffer->count;
 
-        return push_value(meta, data);
+        return push_value(buffer, data);
 }
 
 int buffer_pop(struct buffer *buffer)
 {
-        struct meta *meta = buffer_to_meta(buffer);
-        if (!meta)
+        if (!buffer)
                 return -EINVAL;
 
-        if (meta->status == BUFFER_EMPTY)
+        if (buffer->status == BUFFER_EMPTY)
                 return -ENOMEM;
 
-        meta->type->destroy(data_offset(meta, meta->read));
-        meta->read = (meta->read + 1) % meta->count;
+        buffer->type->destroy(data_offset(buffer, buffer->read));
+        buffer->read = (buffer->read + 1) % buffer->count;
 
-        if (meta->read == meta->write) {
-                meta->status = BUFFER_EMPTY;
+        if (buffer->read == buffer->write) {
+                buffer->status = BUFFER_EMPTY;
                 return ENOMEM;
         }
 
-        meta->status = BUFFER_NONE;
+        buffer->status = BUFFER_NONE;
         return 0;
 }
 
 int buffer_clear(struct buffer *buffer)
 {
-        struct meta *meta = buffer_to_meta(buffer);
-        if (!meta)
+        if (!buffer)
                 return -EINVAL;
 
-        destroy_values(meta);
-        meta->read = meta->write;
-        meta->status = BUFFER_EMPTY;
+        destroy_values(buffer);
+        buffer->read = buffer->write;
+        buffer->status = BUFFER_EMPTY;
 
         return 0;
 }
 
 void *buffer_data(const struct buffer *buffer)
 {
-        const struct meta *meta = buffer_to_meta(buffer);
-        if (!meta)
+        if (!buffer)
                 return NULL;
 
-        if (meta->status == BUFFER_EMPTY)
+        if (buffer->status == BUFFER_EMPTY)
                 return NULL;
 
-        return data_offset(meta, meta->read);
+        return data_offset(buffer, buffer->read);
 }
 
 bool buffer_is_empty(const struct buffer *buffer)
 {
-        const struct meta *meta = buffer_to_meta(buffer);
-        if (!meta)
+        if (!buffer)
                 return false;
 
-        return (meta->status == BUFFER_EMPTY);
+        return (buffer->status == BUFFER_EMPTY);
 }
 
 bool buffer_is_full(const struct buffer *buffer)
 {
-        const struct meta *meta = buffer_to_meta(buffer);
-        if (!meta)
+        if (!buffer)
                 return false;
 
-        return (meta->status == BUFFER_FULL);
+        return (buffer->status == BUFFER_FULL);
 }
 
 ssize_t buffer_count(const struct buffer *buffer)
 {
-        const struct meta *meta = buffer_to_meta(buffer);
-        if (!meta)
+        if (!buffer)
                 return -EINVAL;
 
-        return (ssize_t)meta->count;
+        return (ssize_t)buffer->count;
 }
