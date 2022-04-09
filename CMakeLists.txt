@@ -10,6 +10,7 @@ set(SOURCES
         src/liblists.c
         src/libtypes.c
         src/libvectors.c
+        src/libstrmaps.c
 )
 
 set(PUBLIC_HEADERS
