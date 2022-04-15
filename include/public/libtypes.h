@@ -8,11 +8,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include <stdbool.h>
 #include <stddef.h>
 
 /* Definitions ---------------------------------------------------------------*/
 
-typedef void *(*type_copy_cb)(void *, const void *);
+typedef void (*type_copy_cb)(void *, const void *);
 typedef int (*type_comp_cb)(const void *, const void *);
 typedef void (*type_destroy_cb)(void *);
 
@@ -33,6 +34,19 @@ struct type_info {
         type_comp_cb comp;
         type_destroy_cb destroy;
 };
+
+struct type_pointer {
+        void *pointer;
+};
+
+struct type_string {
+        char *string;
+};
+
+/**
+ * @brief Default destroy function. The default behavior is to do nothing.
+ */
+void type_default_destroy(void *);
 
 /* API -----------------------------------------------------------------------*/
 
@@ -56,8 +70,15 @@ const struct type_info *type_double();
 const struct type_info *type_long_double();
 
 /**
- * @brief Returns a default destroy function.
+ * @param auto_free : If 'true', the address pointed by the pointer will be
+ * automatically free()'d on destruction. If 'false' nothing will be done.
  */
-type_destroy_cb type_default_destroy();
+const struct type_info *type_pointer(bool auto_free);
+
+/**
+ * @param auto_free : If 'true', the address pointed by the pointer will be
+ * automatically free()'d on destruction. If 'false' nothing will be done.
+ */
+const struct type_info *type_string(bool auto_free);
 
 #endif /* LIB_TYPES_H */
