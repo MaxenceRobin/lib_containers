@@ -5,7 +5,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libstrmaps.h"
+#include "libmaps.h"
 
 #include <errno.h>
 #include <stddef.h>
@@ -14,10 +14,10 @@
 
 /* Definitions ---------------------------------------------------------------*/
 
-#define DEFAULT_BUCKET_LIST_COUNT 8
+#define DEFAULT_BUCKET_LIST_COUNT 16
 
 struct pair {
-        char *key;
+        void *key;
         void *value;
         unsigned long hash;
         struct pair *next;
@@ -27,8 +27,9 @@ struct bucket {
         struct pair *head;
 };
 
-struct strmap {
-        const struct type_info *type;
+struct map {
+        const struct type_info *key_type;
+        const struct type_info *value_type;
         unsigned int count;
         struct bucket *bucket_list;
         size_t bucket_count;
@@ -36,71 +37,69 @@ struct strmap {
 
 /* Static functions ----------------------------------------------------------*/
 
-/* Utility functions -----------------*/
-
-static unsigned long hash_str(const char *key)
-{
-        unsigned long hash = 5381;
-        unsigned char c;
-
-        while (c = *key++)
-                hash = ((hash << 5) + hash) + c;
-
-        return hash;
-}
-
 static struct bucket *get_bucket_from_key(
-                const struct strmap *map, const char *key)
+                const struct map *map, const void *key)
 {
-        const unsigned long i = hash_str(key) % map->bucket_count;
+        const unsigned long i = map->key_type->hash(key) % map->bucket_count;
         return &(map->bucket_list[i]);
 }
 
 /* Pair API --------------------------*/
 
 static struct pair *create_pair(
-                const char *key,
+                const void *key,
                 const void *value,
-                const struct type_info *type)
+                const struct type_info *key_type,
+                const struct type_info *value_type)
 {
         struct pair *pair = malloc(sizeof(*pair));
         if (!pair)
                 goto error_alloc_pair;
 
-        pair->key = strdup(key);
+        pair->key = malloc(key_type->size);
         if (!pair->key)
-                goto error_copy_key;
+                goto error_alloc_key;
 
-        pair->value = malloc(type->size);
+        key_type->copy(pair->key, key);
+        pair->value = malloc(value_type->size);
         if (!pair->value)
                 goto error_alloc_value;
 
-        type->copy(pair->value, value);
-        pair->hash = hash_str(key);
+        value_type->copy(pair->value, value);
+        pair->hash = key_type->hash(key);
         pair->next = NULL;
 
         return pair;
 
 error_alloc_value:
-error_copy_key:
+        key_type->destroy(pair->key);
+        free(pair->key);
+error_alloc_key:
         free(pair);
 error_alloc_pair:
         return NULL;
 }
 
-static void destroy_pair(struct pair *pair, type_destroy_cb destroy_cb)
+static void destroy_pair(
+                struct pair *pair,
+                type_destroy_cb destroy_key,
+                type_destroy_cb destroy_value)
 {
+        destroy_key(pair->key);
         free(pair->key);
-        destroy_cb(pair->value);
+        destroy_value(pair->value);
         free(pair->value);
         free(pair);
 }
 
-static void destroy_pair_list(struct pair *head, type_destroy_cb destroy_cb)
+static void destroy_pair_list(
+                struct pair *head,
+                type_destroy_cb destroy_key,
+                type_destroy_cb destroy_value)
 {
         while (head) {
                 struct pair *next = head->next;
-                destroy_pair(head, destroy_cb);
+                destroy_pair(head, destroy_key, destroy_value);
                 head = next;
         }
 }
@@ -120,12 +119,13 @@ static struct bucket *create_bucket_list(size_t count)
         return bucket_list;
 }
 
-static void *get_value_from_bucket(const struct bucket *bucket, const char *key)
+static void *get_value_from_bucket(
+                const struct bucket *bucket, const void *key, type_comp_cb comp)
 {
         struct pair *pair = bucket->head;
 
         while (pair) {
-                if (strcmp(pair->key, key) == 0)
+                if (comp(pair->key, key) == 0)
                         return pair->value;
 
                 pair = pair->next;
@@ -146,15 +146,19 @@ static void add_pair_to_bucket_list(
 
 /* Map API ---------------------------*/
 
-static void destroy_map_bucket_list(const struct strmap *map)
+static void destroy_map_bucket_list(const struct map *map)
 {
-        for (unsigned int i = 0; i < map->bucket_count; ++i)
-                destroy_pair_list(map->bucket_list[i].head, map->type->destroy);
+        for (unsigned int i = 0; i < map->bucket_count; ++i) {
+                destroy_pair_list(
+                                map->bucket_list[i].head,
+                                map->key_type->destroy,
+                                map->value_type->destroy);
+        }
 
         free(map->bucket_list);
 }
 
-static int resize_map_bucket_list(struct strmap *map)
+static int resize_map_bucket_list(struct map *map)
 {
         const size_t new_count = map->bucket_count * 2;
         struct bucket *new_list = create_bucket_list(new_count);
@@ -178,23 +182,28 @@ static int resize_map_bucket_list(struct strmap *map)
         return 0;
 }
 
-static void *get_value_from_map(const struct strmap *map, const char *key)
+static void *get_value_from_map(const struct map *map, const void *key)
 {
         const struct bucket *bucket = get_bucket_from_key(map, key);
-        return get_value_from_bucket(bucket, key);
+        return get_value_from_bucket(bucket, key, map->key_type->comp);
 }
 
 /* Public API ----------------------------------------------------------------*/
 
-struct strmap *strmap_create(const struct type_info *type)
+struct map *map_create(
+                const struct type_info *key_type,
+                const struct type_info *value_type)
 {
-        if (!type)
+        if (!key_type || key_type->size == 0 || !key_type->copy
+                        || !key_type->comp || !key_type->hash
+                        || !key_type->destroy)
                 return NULL;
 
-        if (type->size == 0 || !type->copy || !type->destroy)
+        if (!value_type || value_type->size == 0 || !value_type->copy
+                        || !value_type->destroy)
                 return NULL;
 
-        struct strmap *map = malloc(sizeof(*map));
+        struct map *map = malloc(sizeof(*map));
         if (!map)
                 return NULL;
 
@@ -204,14 +213,15 @@ struct strmap *strmap_create(const struct type_info *type)
                 return NULL;
         }
 
-        map->type = type;
+        map->key_type = key_type;
+        map->value_type = value_type;
         map->bucket_count = DEFAULT_BUCKET_LIST_COUNT;
         map->count = 0;
 
         return map;
 }
 
-void strmap_destroy(const struct strmap *map)
+void map_destroy(const struct map *map)
 {
         if (!map)
                 return;
@@ -220,7 +230,7 @@ void strmap_destroy(const struct strmap *map)
         free((void *)map);
 }
 
-int strmap_add(struct strmap *map, const char *key, const void *value)
+int map_add(struct map *map, const void *key, const void *value)
 {
         if (!map || !key || !value)
                 return -EINVAL;
@@ -228,13 +238,15 @@ int strmap_add(struct strmap *map, const char *key, const void *value)
         if (get_value_from_map(map, key))
                 return -EEXIST;
 
-        struct pair *pair = create_pair(key, value, map->type);
+        struct pair *pair = create_pair(
+                        key, value, map->key_type, map->value_type);
         if (!pair)
                 return -ENOMEM;
 
         if (map->count == map->bucket_count) {
                 if (resize_map_bucket_list(map) < 0) {
-                        destroy_pair(pair, map->type->destroy);
+                        destroy_pair(pair, map->key_type->destroy,
+                                        map->value_type->destroy);
                         return -ENOMEM;
                 }
         }
@@ -245,7 +257,7 @@ int strmap_add(struct strmap *map, const char *key, const void *value)
         return 0;
 }
 
-void *strmap_get(const struct strmap *map, const char *key)
+void *map_get(const struct map *map, const void *key)
 {
         if (!map || !key)
                 return NULL;
@@ -253,7 +265,7 @@ void *strmap_get(const struct strmap *map, const char *key)
         return get_value_from_map(map, key);
 }
 
-int strmap_remove(struct strmap *map, const char *key)
+int map_remove(struct map *map, const void *key)
 {
         if (!map || !key)
                 return -EINVAL;
@@ -262,7 +274,7 @@ int strmap_remove(struct strmap *map, const char *key)
         struct bucket *previous = NULL;
 
         while (bucket->head) {
-                if (strcmp(bucket->head->key, key) != 0) {
+                if (map->key_type->comp(bucket->head->key, key) != 0) {
                         previous->head = bucket->head;
                         bucket->head = bucket->head->next;
                         continue;
@@ -270,7 +282,8 @@ int strmap_remove(struct strmap *map, const char *key)
 
                 /* Match found */
                 struct pair *next = bucket->head->next;
-                destroy_pair(bucket->head, map->type->destroy);
+                destroy_pair(bucket->head, map->key_type->destroy,
+                                map->value_type->destroy);
                 --map->count;
 
                 if (!previous)
@@ -284,7 +297,7 @@ int strmap_remove(struct strmap *map, const char *key)
         return -ENOENT;
 }
 
-int strmap_clear(struct strmap *map)
+int map_clear(struct map *map)
 {
         if (!map)
                 return -EINVAL;

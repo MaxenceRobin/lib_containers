@@ -3,8 +3,8 @@
  * @brief Provides simple string maps manipulation.
  */
 
-#ifndef LIB_STRMAPS_H
-#define LIB_STRMAPS_H
+#ifndef LIB_MAPS_H
+#define LIB_MAPS_H
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -15,23 +15,28 @@
 
 /* Definitions ---------------------------------------------------------------*/
 
-struct strmap;
+struct map;
 
 /* API -----------------------------------------------------------------------*/
 
 /**
- * @brief Creates an empty strmap containin elements of 'type'.
+ * @brief Creates an empty map containing pairs of <'key_type', 'value_type'>.
  *
- * @return Pointer to the new strmap on success.
- * @return NULL if 'type' is invalid.
- * @return NULL if for 'type', 'size' is 0, 'copy' or 'destroy' are invalid.
+ * @return Pointer to the new map on success.
+ * @return NULL if 'key_type' or 'value_type' are invalid.
+ * @return NULL if for 'key_type', 'size' is 0, 'copy' 'comp' 'hash' or
+ * 'destroy' are invalid.
+ * @return NULL if for 'value_type', 'size' is 0, 'copy' or 'destroy' are
+ * invalid.
  */
-struct strmap *strmap_create(const struct type_info *type);
+struct map *map_create(
+                const struct type_info *key_type,
+                const struct type_info *value_type);
 
 /**
  * @brief Destroys 'map'.
  */
-void strmap_destroy(const struct strmap *map);
+void map_destroy(const struct map *map);
 
 /**
  * @brief Adds the pair <'key', 'value'> to 'map'.
@@ -40,10 +45,8 @@ void strmap_destroy(const struct strmap *map);
  * @return -EINVAL if 'map', 'key' or 'value' are invalid.
  * @return -EEXIST if 'key' already exists in 'map'.
  * @return -ENOMEM if the pair could not be added.
- *
- * @warning 'key' MUST be a NULL terminated string.
  */
-int strmap_add(struct strmap *map, const char *key, const void *value);
+int map_add(struct map *map, const void *key, const void *value);
 
 /**
  * @brief Returns the value associated to 'key' inside 'map'.
@@ -51,10 +54,8 @@ int strmap_add(struct strmap *map, const char *key, const void *value);
  * @return Pointer to the value on success.
  * @return NULL if 'map' or 'key' are invalid, or if the value could not be
  * found.
- *
- * @warning 'key' MUST be a NULL terminated string.
  */
-void *strmap_get(const struct strmap *map, const char *key);
+void *map_get(const struct map *map, const void *key);
 
 /**
  * @brief Removes 'key' from 'map'.
@@ -62,10 +63,8 @@ void *strmap_get(const struct strmap *map, const char *key);
  * @return 0 on success.
  * @return -EINVAL if 'map' or 'key' are invalid.
  * @return -ENOENT if no value associated to 'key' was found.
- *
- * @warning 'key' MUST be a NULL terminated string.
  */
-int strmap_remove(struct strmap *map, const char *key);
+int map_remove(struct map *map, const void *key);
 
 /**
  * @brief Clears 'map'.
@@ -74,6 +73,6 @@ int strmap_remove(struct strmap *map, const char *key);
  * @return -EINVAL if 'map' is invalid.
  * @return -ENOMEM if the call failed.
  */
-int strmap_clear(struct strmap *map);
+int map_clear(struct map *map);
 
-#endif /* LIB_STRMAPS_H */
+#endif /* LIB_MAPS_H */
