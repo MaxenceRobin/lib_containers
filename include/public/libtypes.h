@@ -8,28 +8,41 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include <stdbool.h>
 #include <stddef.h>
 
 /* Definitions ---------------------------------------------------------------*/
+
+typedef void (*type_copy_cb)(void *, const void *);
+typedef int (*type_comp_cb)(const void *, const void *);
+typedef void (*type_destroy_cb)(void *);
+typedef unsigned long (*type_hash_cb)(const void *);
 
 /**
  * @brief Callbacks for types manipulation.
  *
  * @param size : Size in bytes to allocate for an element of this type.
- * @param copy : Callback to copy an element in another one. The signature
- * follows the one of memcpy.
+ * @param copy : Callback to copy an element in another one.
  * @param comp : Callback to compare two elements in order to classify them.
- * The signature follows the one of memcmp.
  * @param destroy : Callback to destroy eventual data inside an instance of this
- * this type. This callback MUST NOT destroy the element itself, only data
+ * type. This callback MUST NOT destroy the element itself, only data
  * contained inside it (for exemple pointers), if there is nothing to destroy
  * inside an instance of this type, this callback must do nothing.
  */
 struct type_info {
         size_t size;
-        void *(*copy)(void *, const void *, size_t);
-        int (*comp)(const void *, const void *, size_t);
-        void (*destroy)(void *);
+        type_copy_cb copy;
+        type_comp_cb comp;
+        type_destroy_cb destroy;
+        type_hash_cb hash;
+};
+
+struct type_pointer {
+        void *pointer;
+};
+
+struct type_string {
+        char *string;
 };
 
 /* API -----------------------------------------------------------------------*/
@@ -54,18 +67,20 @@ const struct type_info *type_double();
 const struct type_info *type_long_double();
 
 /**
- * @brief Returns a default copy function.
+ * @param auto_free : If 'true', the address pointed by the pointer will be
+ * automatically free()'d on destruction. If 'false' nothing will be done.
  */
-void *(*type_default_copy())(void *, const void *, size_t);
+const struct type_info *type_pointer(bool auto_free);
 
 /**
- * @brief Returns a default comp function.
+ * @param auto_free : If 'true', the address pointed by the pointer will be
+ * automatically free()'d on destruction. If 'false' nothing will be done.
  */
-int (*type_default_comp())(const void *, const void *, size_t);
+const struct type_info *type_string(bool auto_free);
 
 /**
- * @brief Returns a default destroy function.
+ * @brief Default destroy function. The default behavior is to do nothing.
  */
-void (*type_default_destroy())(void *);
+void type_default_destroy(void *);
 
 #endif /* LIB_TYPES_H */

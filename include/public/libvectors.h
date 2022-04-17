@@ -8,7 +8,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libcontainers.h"
 #include "libtypes.h"
 
 #include <stddef.h>
@@ -20,7 +19,9 @@
  * @brief Creates a vector of 'count' elements of 'type'.
  *
  * @return Pointer to the new vector on success.
- * @return NULL on failure.
+ * @return NULL if 'type' is invalid.
+ * @return NULL if for 'type', 'size' is 0, 'copy' 'comp' or 'destroy' are
+ * invalid.
  */
 void *vector_create(const struct type_info *type, size_t count);
 
@@ -61,7 +62,7 @@ int vector_pop(void *vector);
  *      0 on success.
  *      -EINVAL if 'vector' or 'data' are invalid.
  *      -ERANGE if 'pos' is out of bounds.
- *      -ENOMEM if the valud could not be inserted.
+ *      -ENOMEM if the value could not be inserted.
  */
 void *vector_insert(void *vector, unsigned int pos, const void *data, int *ret);
 
@@ -73,6 +74,36 @@ void *vector_insert(void *vector, unsigned int pos, const void *data, int *ret);
  * @return -ERANGE if 'pos' is out of bounds.
  */
 int vector_remove(void *vector, unsigned int pos);
+
+/**
+ * @brief Modifies the length of 'vector' to 'size' elements, reallocating
+ * 'vector' if needed.
+ *
+ * @return Pointer to a valid vector, if it was modified or not.
+ *
+ * @note If 'ret' is not NULL, its value will be modified to indicate if the
+ * operation was successful or not :
+ *      0 on success.
+ *      -EINVAL if 'vector' is invalid.
+ *      -ENOMEM if 'vector' could not be resized.
+ */
+void *vector_resize(void *vector, size_t size, int *ret);
+
+/**
+ * @brief Sorts 'vector' in ascending order.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'vector' is invalid.
+ */
+int vector_sort(void *vector);
+
+/**
+ * @brief Removes all elements from 'vector".
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'vector' is invalid.
+ */
+int vector_clear(void *vector);
 
 /**
  * @brief Allocates enough memory for 'vector' to contain 'count' elements
@@ -101,14 +132,6 @@ void *vector_reserve(void *vector, size_t count, int *ret);
  *      -ENOMEM if the reallocation failed.
  */
 void *vector_fit(void *vector, int *ret);
-
-/**
- * @brief Returns the associated container of 'vector'.
- *
- * @return Pointer to the container of 'vector' on success.
- * @return NULL if 'vector' is invalid.
- */
-struct container *vector_container(void *vector);
 
 /**
  * @brief Returns the number of elements of 'vector'.
