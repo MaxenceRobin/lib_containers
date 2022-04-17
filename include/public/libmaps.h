@@ -17,6 +17,11 @@
 
 struct map;
 
+struct pair {
+        void *key;
+        void *value;
+};
+
 /* API -----------------------------------------------------------------------*/
 
 /**
@@ -56,6 +61,15 @@ int map_add(struct map *map, const void *key, const void *value);
  * found.
  */
 void *map_get(const struct map *map, const void *key);
+
+/**
+ * @brief Returns the <key, value> pair associated to 'key' inside 'map'.
+ *
+ * @return Pointer to the pair on success.
+ * @return NULL if 'map' or 'key' are invalid, or if the pair could not be
+ * found.
+ */
+struct pair *map_get_pair(const struct map *map, const void *key);
 
 /**
  * @brief Removes 'key' from 'map'.

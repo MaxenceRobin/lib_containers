@@ -16,15 +16,14 @@
 
 #define DEFAULT_BUCKET_LIST_COUNT 16
 
-struct pair {
-        void *key;
-        void *value;
+struct holder {
+        struct pair pair;
         unsigned long hash;
-        struct pair *next;
+        struct holder *next;
 };
 
 struct bucket {
-        struct pair *head;
+        struct holder *head;
 };
 
 struct map {
@@ -44,62 +43,62 @@ static struct bucket *get_bucket_from_key(
         return &(map->bucket_list[i]);
 }
 
-/* Pair API --------------------------*/
+/* Holder API --------------------------*/
 
-static struct pair *create_pair(
+static struct holder *create_holder(
                 const void *key,
                 const void *value,
                 const struct type_info *key_type,
                 const struct type_info *value_type)
 {
-        struct pair *pair = malloc(sizeof(*pair));
-        if (!pair)
-                goto error_alloc_pair;
+        struct holder *holder = malloc(sizeof(*holder));
+        if (!holder)
+                goto error_alloc_holder;
 
-        pair->key = malloc(key_type->size);
-        if (!pair->key)
+        holder->pair.key = malloc(key_type->size);
+        if (!holder->pair.key)
                 goto error_alloc_key;
 
-        key_type->copy(pair->key, key);
-        pair->value = malloc(value_type->size);
-        if (!pair->value)
+        key_type->copy(holder->pair.key, key);
+        holder->pair.value = malloc(value_type->size);
+        if (!holder->pair.value)
                 goto error_alloc_value;
 
-        value_type->copy(pair->value, value);
-        pair->hash = key_type->hash(key);
-        pair->next = NULL;
+        value_type->copy(holder->pair.value, value);
+        holder->hash = key_type->hash(key);
+        holder->next = NULL;
 
-        return pair;
+        return holder;
 
 error_alloc_value:
-        key_type->destroy(pair->key);
-        free(pair->key);
+        key_type->destroy(holder->pair.key);
+        free(holder->pair.key);
 error_alloc_key:
-        free(pair);
-error_alloc_pair:
+        free(holder);
+error_alloc_holder:
         return NULL;
 }
 
-static void destroy_pair(
-                struct pair *pair,
+static void destroy_holder(
+                struct holder *holder,
                 type_destroy_cb destroy_key,
                 type_destroy_cb destroy_value)
 {
-        destroy_key(pair->key);
-        free(pair->key);
-        destroy_value(pair->value);
-        free(pair->value);
-        free(pair);
+        destroy_key(holder->pair.key);
+        free(holder->pair.key);
+        destroy_value(holder->pair.value);
+        free(holder->pair.value);
+        free(holder);
 }
 
-static void destroy_pair_list(
-                struct pair *head,
+static void destroy_holder_list(
+                struct holder *head,
                 type_destroy_cb destroy_key,
                 type_destroy_cb destroy_value)
 {
         while (head) {
-                struct pair *next = head->next;
-                destroy_pair(head, destroy_key, destroy_value);
+                struct holder *next = head->next;
+                destroy_holder(head, destroy_key, destroy_value);
                 head = next;
         }
 }
@@ -119,29 +118,29 @@ static struct bucket *create_bucket_list(size_t count)
         return bucket_list;
 }
 
-static void *get_value_from_bucket(
+static struct pair *get_pair_from_bucket(
                 const struct bucket *bucket, const void *key, type_comp_cb comp)
 {
-        struct pair *pair = bucket->head;
+        struct holder *holder = bucket->head;
 
-        while (pair) {
-                if (comp(pair->key, key) == 0)
-                        return pair->value;
+        while (holder) {
+                if (comp(holder->pair.key, key) == 0)
+                        return &(holder->pair);
 
-                pair = pair->next;
+                holder = holder->next;
         }
 
         return NULL;
 }
 
-static void add_pair_to_bucket_list(
-                struct bucket *list, size_t count, struct pair *pair)
+static void add_holder_to_bucket_list(
+                struct bucket *list, size_t count, struct holder *holder)
 {
-        unsigned long i = pair->hash % count;
+        unsigned long i = holder->hash % count;
         struct bucket *bucket = &(list[i]);
 
-        pair->next = bucket->head;
-        bucket->head = pair;
+        holder->next = bucket->head;
+        bucket->head = holder;
 }
 
 /* Map API ---------------------------*/
@@ -149,7 +148,7 @@ static void add_pair_to_bucket_list(
 static void destroy_map_bucket_list(const struct map *map)
 {
         for (unsigned int i = 0; i < map->bucket_count; ++i) {
-                destroy_pair_list(
+                destroy_holder_list(
                                 map->bucket_list[i].head,
                                 map->key_type->destroy,
                                 map->value_type->destroy);
@@ -166,12 +165,12 @@ static int resize_map_bucket_list(struct map *map)
                 return -ENOMEM;
 
         for (unsigned int i = 0; i < map->count; ++i) {
-                struct pair *pair = map->bucket_list[i].head;
+                struct holder *holder = map->bucket_list[i].head;
 
-                while (pair) {
-                        struct pair *next = pair->next;
-                        add_pair_to_bucket_list(new_list, new_count, pair);
-                        pair = next;
+                while (holder) {
+                        struct holder *next = holder->next;
+                        add_holder_to_bucket_list(new_list, new_count, holder);
+                        holder = next;
                 }
         }
 
@@ -182,10 +181,10 @@ static int resize_map_bucket_list(struct map *map)
         return 0;
 }
 
-static void *get_value_from_map(const struct map *map, const void *key)
+static struct pair *get_pair_from_map(const struct map *map, const void *key)
 {
         const struct bucket *bucket = get_bucket_from_key(map, key);
-        return get_value_from_bucket(bucket, key, map->key_type->comp);
+        return get_pair_from_bucket(bucket, key, map->key_type->comp);
 }
 
 /* Public API ----------------------------------------------------------------*/
@@ -235,23 +234,23 @@ int map_add(struct map *map, const void *key, const void *value)
         if (!map || !key || !value)
                 return -EINVAL;
 
-        if (get_value_from_map(map, key))
+        if (get_pair_from_map(map, key))
                 return -EEXIST;
 
-        struct pair *pair = create_pair(
+        struct holder *holder = create_holder(
                         key, value, map->key_type, map->value_type);
-        if (!pair)
+        if (!holder)
                 return -ENOMEM;
 
         if (map->count == map->bucket_count) {
                 if (resize_map_bucket_list(map) < 0) {
-                        destroy_pair(pair, map->key_type->destroy,
+                        destroy_holder(holder, map->key_type->destroy,
                                         map->value_type->destroy);
                         return -ENOMEM;
                 }
         }
 
-        add_pair_to_bucket_list(map->bucket_list, map->bucket_count, pair);
+        add_holder_to_bucket_list(map->bucket_list, map->bucket_count, holder);
         ++map->count;
 
         return 0;
@@ -262,7 +261,16 @@ void *map_get(const struct map *map, const void *key)
         if (!map || !key)
                 return NULL;
 
-        return get_value_from_map(map, key);
+        const struct pair *pair = get_pair_from_map(map, key);
+        return (pair ? pair->value : NULL);
+}
+
+struct pair *map_get_pair(const struct map *map, const void *key)
+{
+        if (!map || !key)
+                return NULL;
+
+        return get_pair_from_map(map, key);
 }
 
 int map_remove(struct map *map, const void *key)
@@ -274,15 +282,15 @@ int map_remove(struct map *map, const void *key)
         struct bucket *previous = NULL;
 
         while (bucket->head) {
-                if (map->key_type->comp(bucket->head->key, key) != 0) {
+                if (map->key_type->comp(bucket->head->pair.key, key) != 0) {
                         previous->head = bucket->head;
                         bucket->head = bucket->head->next;
                         continue;
                 }
 
                 /* Match found */
-                struct pair *next = bucket->head->next;
-                destroy_pair(bucket->head, map->key_type->destroy,
+                struct holder *next = bucket->head->next;
+                destroy_holder(bucket->head, map->key_type->destroy,
                                 map->value_type->destroy);
                 --map->count;
 
