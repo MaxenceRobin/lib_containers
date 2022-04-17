@@ -12,7 +12,9 @@
 
 /* Definitions ---------------------------------------------------------------*/
 
-#define DECL_TYPE(name, type) \
+/* Copy and comp callbacks -----------*/
+
+#define DECL_COPY_COMP(name, type) \
 \
 static void copy_##name(void *dest, const void *src) \
 { \
@@ -22,12 +24,30 @@ static void copy_##name(void *dest, const void *src) \
 static int comp_##name(const void *first, const void *second) \
 { \
         return *((type *)first) - *((type *)second); \
+}
+
+/* Hashable types --------------------*/
+
+#define DECL_TYPE_HASH(name, type) \
+\
+DECL_COPY_COMP(name, type) \
+\
+static unsigned long hash_##name(const void *data) \
+{ \
+        unsigned long value = *((type *)data); \
+\
+        value = ((value >> 16) ^ value) * 0x45d9f3b; \
+        value = ((value >> 16) ^ value) * 0x45d9f3b; \
+        value = (value >> 16) ^ value; \
+\
+        return value; \
 } \
 \
 static struct type_info info_##name = { \
         .size = sizeof(type), \
         .copy = copy_##name, \
         .comp = comp_##name, \
+        .hash = hash_##name, \
         .destroy = type_default_destroy \
 }; \
 \
@@ -36,30 +56,49 @@ const struct type_info *type_##name() \
         return &info_##name; \
 }
 
-void type_default_destroy(void *data)
-{
+/* Non hashable types ----------------*/
+
+#define DECL_TYPE_NO_HASH(name, type) \
+\
+DECL_COPY_COMP(name, type) \
+\
+static struct type_info info_##name = { \
+        .size = sizeof(type), \
+        .copy = copy_##name, \
+        .comp = comp_##name, \
+        .hash = NULL, \
+        .destroy = type_default_destroy \
+}; \
+\
+const struct type_info *type_##name() \
+{ \
+        return &info_##name; \
 }
 
 /* API -----------------------------------------------------------------------*/
 
-DECL_TYPE(char, char)
-DECL_TYPE(uchar, unsigned char)
+DECL_TYPE_HASH(char, char)
+DECL_TYPE_HASH(uchar, unsigned char)
 
-DECL_TYPE(short, short)
-DECL_TYPE(ushort, unsigned short)
+DECL_TYPE_HASH(short, short)
+DECL_TYPE_HASH(ushort, unsigned short)
 
-DECL_TYPE(int, int)
-DECL_TYPE(uint, unsigned int)
+DECL_TYPE_HASH(int, int)
+DECL_TYPE_HASH(uint, unsigned int)
 
-DECL_TYPE(long, long)
-DECL_TYPE(ulong, unsigned long)
+DECL_TYPE_HASH(long, long)
+DECL_TYPE_HASH(ulong, unsigned long)
 
-DECL_TYPE(long_long, long long)
-DECL_TYPE(ulong_long, unsigned long long)
+DECL_TYPE_HASH(long_long, long long)
+DECL_TYPE_HASH(ulong_long, unsigned long long)
 
-DECL_TYPE(float, float)
-DECL_TYPE(double, double)
-DECL_TYPE(long_double, long double)
+DECL_TYPE_NO_HASH(float, float)
+DECL_TYPE_NO_HASH(double, double)
+DECL_TYPE_NO_HASH(long_double, long double)
+
+void type_default_destroy(void *data)
+{
+}
 
 /* Special types -------------------------------------------------------------*/
 
@@ -91,6 +130,7 @@ static struct type_info info_pointer = {
         .size = sizeof(struct type_pointer),
         .copy = copy_pointer,
         .comp = comp_pointer,
+        .hash = NULL,
         .destroy = type_default_destroy
 };
 
@@ -98,6 +138,7 @@ static struct type_info info_auto_pointer = {
         .size = sizeof(struct type_pointer),
         .copy = copy_pointer,
         .comp = comp_pointer,
+        .hash = NULL,
         .destroy = destroy_pointer
 };
 
@@ -133,6 +174,21 @@ static int comp_string(const void *first, const void *second)
         return strcmp(a->string, b->string);
 }
 
+static unsigned long hash_string(const void *data)
+{
+        unsigned long hash = 5381;
+        unsigned char c;
+        const char *string = ((struct type_string *)data)->string;
+
+        if (!string)
+                return (unsigned long)-1;
+
+        while (c = *string++)
+                hash = (hash << 5) + hash + c;
+
+        return hash;
+}
+
 static void destroy_string(void *data)
 {
         struct type_string *value = data;
@@ -143,6 +199,7 @@ static struct type_info info_string = {
         .size = sizeof(struct type_string),
         .copy = copy_string,
         .comp = comp_string,
+        .hash = hash_string,
         .destroy = type_default_destroy
 };
 
@@ -150,6 +207,7 @@ static struct type_info info_auto_string = {
         .size = sizeof(struct type_string),
         .copy = copy_string,
         .comp = comp_string,
+        .hash = hash_string,
         .destroy = destroy_string
 };
 
