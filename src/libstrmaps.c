@@ -191,6 +191,9 @@ struct strmap *strmap_create(const struct type_info *type)
         if (!type)
                 return NULL;
 
+        if (type->size == 0 || !type->copy || !type->destroy)
+                return NULL;
+
         struct strmap *map = malloc(sizeof(*map));
         if (!map)
                 return NULL;

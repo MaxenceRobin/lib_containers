@@ -25,6 +25,7 @@ struct buffer;
  *
  * @return Pointer to the new buffer on success.
  * @return NULL if 'type' is invalid or 'count' is 0.
+ * @return NULL if for 'type', 'size' is 0, 'copy' or 'destroy' are invalid.
  */
 struct buffer *buffer_create(const struct type_info *type, size_t count);
 

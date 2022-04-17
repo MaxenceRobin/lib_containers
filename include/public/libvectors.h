@@ -19,7 +19,9 @@
  * @brief Creates a vector of 'count' elements of 'type'.
  *
  * @return Pointer to the new vector on success.
- * @return NULL on failure.
+ * @return NULL if 'type' is invalid.
+ * @return NULL if for 'type', 'size' is 0, 'copy' 'comp' or 'destroy' are
+ * invalid.
  */
 void *vector_create(const struct type_info *type, size_t count);
 

@@ -23,7 +23,8 @@ struct strmap;
  * @brief Creates an empty strmap containin elements of 'type'.
  *
  * @return Pointer to the new strmap on success.
- * @return NULL on failure.
+ * @return NULL if 'type' is invalid.
+ * @return NULL if for 'type', 'size' is 0, 'copy' or 'destroy' are invalid.
  */
 struct strmap *strmap_create(const struct type_info *type);
 

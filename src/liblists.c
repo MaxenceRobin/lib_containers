@@ -90,6 +90,9 @@ struct list *list_create(const struct type_info *type)
         if (!type)
                 return NULL;
 
+        if (type->size == 0 || !type->copy || !type->destroy)
+                return NULL;
+
         struct list *list = malloc(sizeof(*list));
         if (!list)
                 return NULL;

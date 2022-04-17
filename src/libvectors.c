@@ -168,6 +168,9 @@ void *vector_create(const struct type_info *type, size_t count)
         if (!type)
                 return NULL;
 
+        if (type->size == 0 || !type->copy || !type->comp || !type->destroy)
+                return NULL;
+
         struct meta *meta = malloc(sizeof(*meta) + count * type->size);
         if (!meta)
                 return NULL;

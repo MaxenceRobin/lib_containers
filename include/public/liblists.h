@@ -22,7 +22,8 @@ struct list;
  * @brief Creates an empty list of 'type'.
  *
  * @return Pointer to the created list on success.
- * @return NULL on failure.
+ * @return NULL if 'type' is invalid.
+ * @return NULL if for 'type', 'size' is 0, 'copy' or 'destroy' are invalid.
  */
 struct list *list_create(const struct type_info *type);
 
