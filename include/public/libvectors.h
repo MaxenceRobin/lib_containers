@@ -8,6 +8,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "libiterators.h"
 #include "libtypes.h"
 
 #include <stddef.h>
@@ -149,5 +150,23 @@ ssize_t vector_len(const void *vector);
  * @return -EINVAL if 'vector' is invalid.
  */
 ssize_t vector_capacity(const void *vector);
+
+/* Iterator API --------------------------------------------------------------*/
+
+/**
+ * @brief Creates an iterator over the first element of 'vector'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'vector' is invalid or on failure.
+ */
+struct iterator *vector_begin(const void *vector);
+
+/**
+ * @brief Creates an iterator over the last element of 'vector'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'vector' is invalid or on failure.
+ */
+struct iterator *vector_end(const void *vector);
 
 #endif /* LIB_VECTORS_H */

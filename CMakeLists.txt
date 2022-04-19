@@ -11,6 +11,7 @@ set(SOURCES
         src/libtypes.c
         src/libvectors.c
         src/libmaps.c
+        src/libiterators.c
 )
 
 set(PUBLIC_HEADERS
