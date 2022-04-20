@@ -5,8 +5,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "libiterators_private.h"
 #include "liblists.h"
-#include "libtypes.h"
 
 #include <errno.h>
 #include <stdbool.h>
@@ -168,4 +168,99 @@ ssize_t list_len(const struct list *list)
                 return -EINVAL;
 
         return (ssize_t)list->len;
+}
+
+/* Iterator API --------------------------------------------------------------*/
+
+/* Iterator implementation -----------*/
+
+struct list_it {
+        struct iterator it; /* Placed at top for inheritance */
+        const struct list *list;
+        struct node *node;
+};
+
+static int list_it_next(struct iterator *it)
+{
+        struct list_it *l_it = (struct list_it *)it;
+        l_it->node = l_it->node->next;
+        return 0;
+}
+
+static void list_it_previous(struct iterator *it)
+{
+        struct list_it *l_it = (struct list_it *)it;
+        l_it->node = l_it->node->previous;
+        return 0;
+}
+
+static bool list_it_is_valid(const struct iterator *it)
+{
+        const struct list_it *l_it = (const struct list_it *)it;
+        return (l_it->node != &l_it->list->node);
+}
+
+static void *list_it_data(const struct iterator *it)
+{
+        if (!list_it_is_valid(it))
+                return NULL;
+
+        const struct list_it *l_it = (const struct list_it *)it;
+        return l_it->node->data;
+}
+
+static void list_it_destroy(struct iterator *it)
+{
+        struct list_it *l_it = (struct list_it *)it;
+        free(l_it);
+}
+
+static struct iterator_callbacks list_it_cbs = {
+        .next_cb = list_it_next,
+        .previous_cb = list_it_previous,
+        .is_valid_cb = list_it_is_valid,
+        .data_cb = list_it_data,
+        .destroy_cb = list_it_destroy
+};
+
+/* Static functions ------------------*/
+
+static struct list_it *list_it_create(const struct list *list)
+{
+        struct list_it *l_it = malloc(sizeof(*l_it));
+        if (!l_it)
+                return NULL;
+
+        it_init(&l_it->it, &list_it_cbs);
+        l_it->list = list;
+
+        return l_it;
+}
+
+/* Public API ------------------------*/
+
+struct iterator *list_begin(const struct list *list)
+{
+        if (!list)
+                return NULL;
+
+        struct list_it *l_it = list_it_create(list);
+        if (!l_it)
+                return NULL;
+
+        l_it->node = list->node.next;
+        return (struct iterator *)l_it;
+}
+
+struct iterator *list_end(const struct list *list)
+{
+        if (!list)
+                return NULL;
+
+        struct list_it *l_it = list_it_create(list);
+        if (!l_it)
+                return NULL;
+
+        l_it->node = list->node.previous;
+        return (struct iterator *)l_it;
 }

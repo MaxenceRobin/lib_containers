@@ -5,7 +5,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libtypes.h"
+#include "libiterators_private.h"
 #include "libvectors.h"
 
 #include <errno.h>
@@ -361,4 +361,101 @@ ssize_t vector_capacity(const void *vector)
                 return -EINVAL;
 
         return (ssize_t)meta->capacity;
+}
+
+/* Iterator API --------------------------------------------------------------*/
+
+/* Iterator implementation -----------*/
+
+struct vector_it {
+        struct iterator it; /* Placed at top for inheritance */
+        const struct meta *meta;
+        int pos;
+};
+
+static int vector_it_next(struct iterator *it)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        ++v_it->pos;
+        return 0;
+}
+
+static int vector_it_previous(struct iterator *it)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        --v_it->pos;
+        return 0;
+}
+
+static bool vector_it_is_valid(const struct iterator *it)
+{
+        const struct vector_it *v_it = (const struct vector_it *)it;
+        return (0 <= v_it->pos && v_it->pos < v_it->meta->len);
+}
+
+static void *vector_it_data(const struct iterator *it)
+{
+        if (!vector_it_is_valid(it))
+                return NULL;
+
+        const struct vector_it *v_it = (const struct vector_it *)it;
+        return data_offset(v_it->meta, v_it->pos);
+}
+
+static void vector_it_destroy(struct iterator *it)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        free(v_it);
+}
+
+static struct iterator_callbacks vector_it_cbs = {
+        .next_cb = vector_it_next,
+        .previous_cb = vector_it_previous,
+        .is_valid_cb = vector_it_is_valid,
+        .data_cb = vector_it_data,
+        .destroy_cb = vector_it_destroy
+};
+
+/* Static functions ------------------*/
+
+struct vector_it *vector_it_create(const struct meta *meta)
+{
+        struct vector_it *v_it = malloc(sizeof(*v_it));
+        if (!v_it)
+                return NULL;
+
+        it_init(&v_it->it, &vector_it_cbs);
+        v_it->meta = meta;
+
+        return v_it;
+}
+
+/* Public API ------------------------*/
+
+struct iterator *vector_begin(const void *vector)
+{
+        const struct meta *meta = vector_to_meta(vector);
+        if (!meta)
+                return NULL;
+
+        struct vector_it *v_it = vector_it_create(meta);
+        if (!v_it)
+                return NULL;
+
+        v_it->pos = 0;
+        return (struct iterator *)v_it;
+}
+
+struct iterator *vector_end(const void *vector)
+{
+        const struct meta *meta = vector_to_meta(vector);
+        if (!meta)
+                return NULL;
+
+        struct vector_it *v_it = vector_it_create(meta);
+        if (!v_it)
+                return NULL;
+
+        v_it->pos = meta->len - 1;
+        return (struct iterator *)v_it;
 }

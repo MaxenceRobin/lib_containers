@@ -8,6 +8,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "libiterators.h"
 #include "libtypes.h"
 
 #include <sys/types.h>
@@ -75,5 +76,23 @@ int list_pop_back(struct list *list);
  * @return -EINVAL if 'list' is invalid.
  */
 ssize_t list_len(const struct list *list);
+
+/* Iterator API --------------------------------------------------------------*/
+
+/**
+ * @brief Creates an iterator over the first element of 'list'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'list' is invalid or on failure.
+ */
+struct iterator *list_begin(const struct list *list);
+
+/**
+ * @brief Creates an iterator over the last element of 'list'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'list' is invalid or on failure.
+ */
+struct iterator *list_end(const struct list *list);
 
 #endif /* LIB_LISTS_H */
