@@ -8,6 +8,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "libiterators.h"
 #include "libtypes.h"
 
 #include <stdbool.h>
@@ -60,7 +61,7 @@ int map_add(struct map *map, const void *key, const void *value);
  * @return NULL if 'map' or 'key' are invalid, or if the value could not be
  * found.
  */
-void *map_get(const struct map *map, const void *key);
+void *map_value(const struct map *map, const void *key);
 
 /**
  * @brief Returns the <key, value> pair associated to 'key' inside 'map'.
@@ -69,7 +70,7 @@ void *map_get(const struct map *map, const void *key);
  * @return NULL if 'map' or 'key' are invalid, or if the pair could not be
  * found.
  */
-struct pair *map_get_pair(const struct map *map, const void *key);
+struct pair *map_pair(const struct map *map, const void *key);
 
 /**
  * @brief Removes 'key' from 'map'.
@@ -88,5 +89,26 @@ int map_remove(struct map *map, const void *key);
  * @return -ENOMEM if the call failed.
  */
 int map_clear(struct map *map);
+
+/* Iterator API --------------------------------------------------------------*/
+
+/**
+ * @brief Creates an iterator over the first element of 'map'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'map' is invalid or on failure.
+ */
+struct iterator *map_begin(const struct map *map);
+
+/**
+ * @brief Returns the pair pointed by 'it".
+ * 
+ * @return Pointer on the pair on success.
+ * @return NULL if 'it' is invalid.
+ * 
+ * @warning 'it' must have been created from a map, otherwise undefined
+ * behavior will happen. 
+ */
+struct pair *map_pair_from_it(const struct iterator *it);
 
 #endif /* LIB_MAPS_H */

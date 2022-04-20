@@ -5,6 +5,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "libiterators_private.h"
 #include "libmaps.h"
 
 #include <errno.h>
@@ -256,7 +257,7 @@ int map_add(struct map *map, const void *key, const void *value)
         return 0;
 }
 
-void *map_get(const struct map *map, const void *key)
+void *map_value(const struct map *map, const void *key)
 {
         if (!map || !key)
                 return NULL;
@@ -265,7 +266,7 @@ void *map_get(const struct map *map, const void *key)
         return (pair ? pair->value : NULL);
 }
 
-struct pair *map_get_pair(const struct map *map, const void *key)
+struct pair *map_pair(const struct map *map, const void *key)
 {
         if (!map || !key)
                 return NULL;
@@ -320,4 +321,113 @@ int map_clear(struct map *map)
         map->count = 0;
 
         return 0;
+}
+
+/* Iterator API --------------------------------------------------------------*/
+
+/* Iterator implementation -----------*/
+
+struct map_it {
+        struct iterator it; /* Placed at top for inheritance */
+        const struct map *map;
+        unsigned int bucket_pos;
+        struct holder *holder;
+};
+
+static void map_it_seek_next(struct map_it *m_it)
+{
+        do {
+                if (m_it->holder) {
+                        m_it->holder = m_it->holder->next;
+                } else {
+                        const unsigned int new_pos = ++m_it->bucket_pos;
+                        if (new_pos >= m_it->map->bucket_count)
+                                break;
+
+                        m_it->holder = m_it->map->bucket_list[new_pos].head;
+                }
+        } while (!m_it->holder);
+}
+
+static int map_it_next(struct iterator *it)
+{
+        struct map_it *m_it = (struct map_it *)it;
+        map_it_seek_next(m_it);
+        return 0;
+}
+
+static int map_it_previous(struct iterator *it)
+{
+        return -EOPNOTSUPP;
+}
+
+static bool map_it_is_valid(const struct iterator *it)
+{
+        const struct map_it *m_it = (const struct map_it *)it;
+        return (m_it->bucket_pos < m_it->map->bucket_count && m_it->holder);
+}
+
+static void *map_it_data(const struct iterator *it)
+{
+        if (!map_it_is_valid(it))
+                return NULL;
+
+        const struct map_it *m_it = (const struct map_it *)it;
+        return m_it->holder->pair.value;
+}
+
+static void map_it_destroy(struct iterator *it)
+{
+        struct map_it *m_it = (struct map_it *)it;
+        free(m_it);
+}
+
+static struct iterator_callbacks map_it_cbs = {
+        .next_cb = map_it_next,
+        .previous_cb = map_it_previous,
+        .is_valid_cb = map_it_is_valid,
+        .data_cb = map_it_data,
+        .destroy_cb = map_it_destroy
+};
+
+/* Static functions ------------------*/
+
+static struct map_it *map_it_create(const struct map *map)
+{
+        struct map_it *m_it = malloc(sizeof(*m_it));
+        if (!m_it)
+                return NULL;
+
+        it_init(&m_it->it, &map_it_cbs);
+        m_it->map = map;
+
+        return m_it;
+}
+
+/* Public API ------------------------*/
+
+struct iterator *map_begin(const struct map *map)
+{
+        if (!map)
+                return NULL;
+
+        struct map_it *m_it = map_it_create(map);
+        if (!m_it)
+                return NULL;
+
+        m_it->bucket_pos = 0;
+        m_it->holder = map->bucket_list[0].head;
+        if (!m_it->holder)
+                map_it_seek_next(m_it);
+
+        return (struct iterator *)m_it;
+}
+
+struct pair *map_pair_from_it(const struct iterator *it)
+{
+        if (!it || !map_it_is_valid(it))
+                return NULL;
+
+        const struct map_it *m_it = (const struct map_it *)it;
+        return &m_it->holder->pair;
 }
