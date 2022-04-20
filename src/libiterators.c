@@ -74,3 +74,11 @@ void *it_data(const struct iterator *it)
 
         return it->cbs->data_cb(it);
 }
+
+int it_remove(struct iterator *it)
+{
+        if (!it)
+                return -EINVAL;
+
+        return it->cbs->remove_cb(it);
+}

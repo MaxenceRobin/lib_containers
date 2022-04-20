@@ -65,4 +65,13 @@ bool it_is_valid(const struct iterator *it);
  */
 void *it_data(const struct iterator *it);
 
+/**
+ * @brief Removes the value pointed by 'it'. After the call 'it' points to the
+ * next element of the removed one.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' is invalid.
+ */
+int it_remove(struct iterator *it);
+
 #endif /* LIB_ITERATORS_H */

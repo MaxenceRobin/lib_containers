@@ -20,6 +20,12 @@ struct meta {
         size_t capacity;
 };
 
+struct vector_it {
+        struct iterator it; /* Placed at top for inheritance */
+        struct meta *meta;
+        int pos;
+};
+
 /* Static functions ----------------------------------------------------------*/
 
 /* Conversion functions --------------*/
@@ -367,12 +373,6 @@ ssize_t vector_capacity(const void *vector)
 
 /* Iterator implementation -----------*/
 
-struct vector_it {
-        struct iterator it; /* Placed at top for inheritance */
-        const struct meta *meta;
-        int pos;
-};
-
 static int vector_it_next(struct iterator *it)
 {
         struct vector_it *v_it = (struct vector_it *)it;
@@ -402,6 +402,17 @@ static void *vector_it_data(const struct iterator *it)
         return data_offset(v_it->meta, v_it->pos);
 }
 
+static int vector_it_remove(struct iterator *it)
+{
+        if (!vector_it_is_valid(it))
+                return -EINVAL;
+
+        struct vector_it *v_it = (struct vector_it *)it;
+        remove_element(v_it->meta, v_it->pos);
+
+        return 0;
+}
+
 static void vector_it_destroy(struct iterator *it)
 {
         struct vector_it *v_it = (struct vector_it *)it;
@@ -413,12 +424,13 @@ static struct iterator_callbacks vector_it_cbs = {
         .previous_cb = vector_it_previous,
         .is_valid_cb = vector_it_is_valid,
         .data_cb = vector_it_data,
+        .remove_cb = vector_it_remove,
         .destroy_cb = vector_it_destroy
 };
 
 /* Static functions ------------------*/
 
-struct vector_it *vector_it_create(const struct meta *meta)
+struct vector_it *vector_it_create(struct meta *meta)
 {
         struct vector_it *v_it = malloc(sizeof(*v_it));
         if (!v_it)
@@ -434,7 +446,7 @@ struct vector_it *vector_it_create(const struct meta *meta)
 
 struct iterator *vector_begin(const void *vector)
 {
-        const struct meta *meta = vector_to_meta(vector);
+        struct meta *meta = vector_to_meta(vector);
         if (!meta)
                 return NULL;
 
@@ -448,7 +460,7 @@ struct iterator *vector_begin(const void *vector)
 
 struct iterator *vector_end(const void *vector)
 {
-        const struct meta *meta = vector_to_meta(vector);
+        struct meta *meta = vector_to_meta(vector);
         if (!meta)
                 return NULL;
 

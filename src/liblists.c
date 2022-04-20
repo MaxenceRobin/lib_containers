@@ -28,6 +28,12 @@ struct list {
         struct node node; /* Useful for functions simplifications */
 };
 
+struct list_it {
+        struct iterator it; /* Placed at top for inheritance */
+        const struct list *list;
+        struct node *node;
+};
+
 /* Static functions ----------------------------------------------------------*/
 
 /* Private utility functions ---------*/
@@ -144,6 +150,23 @@ int list_push_back(struct list *list, const void *value)
         return 0;
 }
 
+int list_insert(struct list *list, struct iterator *it, const void *value)
+{
+        if (!list || !it || !value)
+                return -EINVAL;
+
+        struct list_it *l_it = (struct list_it *)it;
+        if (l_it->list != list)
+                return -EINVAL;
+
+        struct node *node = insert_node(list, l_it->node->previous, value);
+        if (!node)
+                return -ENOMEM;
+
+        l_it->node = node;
+        return 0;
+}
+
 int list_pop_front(struct list *list)
 {
         if (!list)
@@ -174,12 +197,6 @@ ssize_t list_len(const struct list *list)
 
 /* Iterator implementation -----------*/
 
-struct list_it {
-        struct iterator it; /* Placed at top for inheritance */
-        const struct list *list;
-        struct node *node;
-};
-
 static int list_it_next(struct iterator *it)
 {
         struct list_it *l_it = (struct list_it *)it;
@@ -209,6 +226,19 @@ static void *list_it_data(const struct iterator *it)
         return l_it->node->data;
 }
 
+static int list_it_remove(struct iterator *it)
+{
+        if (!list_it_is_valid)
+                return -EINVAL;
+
+        struct list_it *l_it = (struct list_it *)it;
+        struct node *next = l_it->node->next;
+        remove_node(l_it->node);
+        l_it->node = next;
+
+        return 0;
+}
+
 static void list_it_destroy(struct iterator *it)
 {
         struct list_it *l_it = (struct list_it *)it;
@@ -220,6 +250,7 @@ static struct iterator_callbacks list_it_cbs = {
         .previous_cb = list_it_previous,
         .is_valid_cb = list_it_is_valid,
         .data_cb = list_it_data,
+        .remove_cb = list_it_remove,
         .destroy_cb = list_it_destroy
 };
 
