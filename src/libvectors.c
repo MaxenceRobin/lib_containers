@@ -402,6 +402,12 @@ static void *vector_it_data(const struct iterator *it)
         return data_offset(v_it->meta, v_it->pos);
 }
 
+static const struct type_info *vector_it_type(const struct iterator *it)
+{
+        const struct vector_it *v_it = (const struct vector_it *)it;
+        return v_it->meta->type;
+}
+
 static int vector_it_remove(struct iterator *it)
 {
         if (!vector_it_is_valid(it))
@@ -424,6 +430,7 @@ static struct iterator_callbacks vector_it_cbs = {
         .previous_cb = vector_it_previous,
         .is_valid_cb = vector_it_is_valid,
         .data_cb = vector_it_data,
+        .type_cb = vector_it_type,
         .remove_cb = vector_it_remove,
         .destroy_cb = vector_it_destroy
 };

@@ -226,6 +226,12 @@ static void *list_it_data(const struct iterator *it)
         return l_it->node->data;
 }
 
+static const struct type_info *list_it_type(const struct iterator *it)
+{
+        const struct list_it *l_it = (const struct list_it *)it;
+        return l_it->list->type;
+}
+
 static int list_it_remove(struct iterator *it)
 {
         if (!list_it_is_valid)
@@ -250,6 +256,7 @@ static struct iterator_callbacks list_it_cbs = {
         .previous_cb = list_it_previous,
         .is_valid_cb = list_it_is_valid,
         .data_cb = list_it_data,
+        .type_cb = list_it_type,
         .remove_cb = list_it_remove,
         .destroy_cb = list_it_destroy
 };

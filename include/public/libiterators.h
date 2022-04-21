@@ -8,6 +8,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "libtypes.h"
+
 #include <stdbool.h>
 
 /* Definition ----------------------------------------------------------------*/
@@ -64,6 +66,14 @@ bool it_is_valid(const struct iterator *it);
  * @return NULL if 'it' is invalid.
  */
 void *it_data(const struct iterator *it);
+
+/**
+ * @brief Returns the type_info of 'it".
+ *
+ * @return Pointer to the type_info on success.
+ * @return NULL if 'it' is invalid.
+ */
+const struct type_info *it_type(const struct iterator *it);
 
 /**
  * @brief Removes the value pointed by 'it'. After the call 'it' points to the

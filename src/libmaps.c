@@ -402,6 +402,12 @@ static void *map_it_data(const struct iterator *it)
         return m_it->node->pair.value;
 }
 
+static const struct type_info *map_id_type(const struct iterator *it)
+{
+        const struct map_it *m_it = (const struct map_it *)it;
+        return m_it->map->value_type;
+}
+
 static int map_it_remove(struct iterator *it)
 {
         struct map_it *m_it = (struct map_it *)it;
@@ -426,6 +432,7 @@ static struct iterator_callbacks map_it_cbs = {
         .previous_cb = map_it_previous,
         .is_valid_cb = map_it_is_valid,
         .data_cb = map_it_data,
+        .type_cb = map_id_type,
         .remove_cb = map_it_remove,
         .destroy_cb = map_it_destroy
 };

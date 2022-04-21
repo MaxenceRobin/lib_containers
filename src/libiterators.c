@@ -75,6 +75,14 @@ void *it_data(const struct iterator *it)
         return it->cbs->data_cb(it);
 }
 
+const struct type_info *it_type(const struct iterator *it)
+{
+        if (!it)
+                return NULL;
+
+        return it->cbs->type_cb(it);
+}
+
 int it_remove(struct iterator *it)
 {
         if (!it)
