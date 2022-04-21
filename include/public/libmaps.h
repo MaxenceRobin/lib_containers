@@ -109,6 +109,22 @@ struct iterator *map_begin(struct map *map);
 struct iterator *map_end(struct map *map);
 
 /**
+ * @brief Creates a reverse iterator over the last element of 'map'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'map' is invalid or on failure.
+ */
+struct iterator *map_rbegin(struct map *map);
+
+/**
+ * @brief Creates a reverse iterator over the first element of 'map'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'map' is invalid or on failure.
+ */
+struct iterator *map_rend(struct map *map);
+
+/**
  * @brief Returns the pair pointed by 'it".
  *
  * @return Pointer on the pair on success.

@@ -103,4 +103,20 @@ struct iterator *list_begin(const struct list *list);
  */
 struct iterator *list_end(const struct list *list);
 
+/**
+ * @brief Creates a reverse iterator over the last element of 'list'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'list' is invalid or on failure.
+ */
+struct iterator *list_rbegin(const struct list *list);
+
+/**
+ * @brief Creates a reverse iterator over the first element of 'list'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'list' is invalid or on failure.
+ */
+struct iterator *list_rend(const struct list *list);
+
 #endif /* LIB_LISTS_H */

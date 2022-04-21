@@ -35,7 +35,7 @@ struct map {
 struct map_it {
         struct iterator it; /* Placed at top for inheritance */
         struct map *map;
-        unsigned int bucket_pos;
+        int bucket_pos;
         struct node *node;
 };
 
@@ -324,6 +324,9 @@ int map_clear(struct map *map)
 
 /* Iterator API --------------------------------------------------------------*/
 
+static struct iterator_callbacks map_it_cbs;
+static struct iterator_callbacks map_rit_cbs;
+
 /* Utility function ------------------*/
 
 static struct node *map_it_current_bucket(const struct map_it *m_it)
@@ -356,13 +359,30 @@ static void map_it_seek_previous(struct map_it *m_it)
                         return;
 
                 --m_it->bucket_pos;
-                if (m_it->bucket_pos >= m_it->map->bucket_count) {
+                if (m_it->bucket_pos < 0) {
                         m_it->node = NULL;
                         return;
                 }
 
                 m_it->node = map_it_current_bucket(m_it);
         }
+}
+
+static struct map_it *map_it_create(
+                struct map *map,
+                int bucket_pos,
+                const struct iterator_callbacks *cbs)
+{
+        struct map_it *m_it = malloc(sizeof(*m_it));
+        if (!m_it)
+                return NULL;
+
+        it_init(&m_it->it, &map_it_cbs);
+        m_it->map = map;
+        m_it->bucket_pos = bucket_pos;
+        m_it->it.cbs = cbs;
+
+        return m_it;
 }
 
 /* Iterator implementation -----------*/
@@ -421,6 +441,47 @@ static int map_it_remove(struct iterator *it)
         return 0;
 }
 
+static int map_rit_remove(struct iterator *it)
+{
+        struct map_it *m_it = (struct map_it *)it;
+        if (!m_it->node)
+                return -EINVAL;
+
+        struct node *node = m_it->node;
+        map_it_seek_previous(m_it);
+        remove_node_from_map(m_it->map, node);
+
+        return 0;
+}
+
+static struct iterator *map_it_dup(struct iterator *it)
+{
+        struct map_it *m_it = (struct map_it *)it;
+        if (!m_it->node)
+                return NULL;
+
+        struct map_it *dup = map_it_create(
+                        m_it->map, m_it->bucket_pos, m_it->it.cbs);
+        if (!dup)
+                return NULL;
+
+        dup->node = m_it->node;
+        return (struct iterator *)dup;
+}
+
+static int map_it_copy(struct iterator *dest, const struct iterator *src)
+{
+        struct map_it *m_dest = (struct map_it *)dest;
+        const struct map_it *m_src = (const struct map_it *)src;
+
+        if (m_dest->map != m_src->map)
+                return -EINVAL;
+
+        m_dest->bucket_pos = m_src->bucket_pos;
+        m_dest->node = m_src->node;
+        return 0;
+}
+
 static void map_it_destroy(struct iterator *it)
 {
         struct map_it *m_it = (struct map_it *)it;
@@ -434,22 +495,22 @@ static struct iterator_callbacks map_it_cbs = {
         .data_cb = map_it_data,
         .type_cb = map_id_type,
         .remove_cb = map_it_remove,
+        .dup_cb = map_it_dup,
+        .copy_cb = map_it_copy,
         .destroy_cb = map_it_destroy
 };
 
-/* Static functions ------------------*/
-
-static struct map_it *map_it_create(struct map *map)
-{
-        struct map_it *m_it = malloc(sizeof(*m_it));
-        if (!m_it)
-                return NULL;
-
-        it_init(&m_it->it, &map_it_cbs);
-        m_it->map = map;
-
-        return m_it;
-}
+static struct iterator_callbacks map_rit_cbs = {
+        .next_cb = map_it_previous,
+        .previous_cb = map_it_next,
+        .is_valid_cb = map_it_is_valid,
+        .data_cb = map_it_data,
+        .type_cb = map_id_type,
+        .remove_cb = map_rit_remove,
+        .dup_cb = map_it_dup,
+        .copy_cb = map_it_copy,
+        .destroy_cb = map_it_destroy
+};
 
 /* Public API ------------------------*/
 
@@ -458,11 +519,9 @@ struct iterator *map_begin(struct map *map)
         if (!map)
                 return NULL;
 
-        struct map_it *m_it = map_it_create(map);
+        struct map_it *m_it = map_it_create(map, 0, &map_it_cbs);
         if (!m_it)
                 return NULL;
-
-        m_it->bucket_pos = 0;
 
         /* Looking for the first valid node starting from the first bucket */
         m_it->node = &map->bucket_list[0];
@@ -476,15 +535,47 @@ struct iterator *map_end(struct map *map)
         if (!map)
                 return NULL;
 
-        struct map_it *m_it = map_it_create(map);
+        struct map_it *m_it =
+                        map_it_create(map, map->bucket_count - 1, &map_it_cbs);
         if (!m_it)
                 return NULL;
-
-        m_it->bucket_pos = map->bucket_count - 1;
 
         /* Looking for the first valid node starting from the last bucket */
         m_it->node = &map->bucket_list[map->bucket_count - 1];
         map_it_seek_previous(m_it);
+
+        return (struct iterator *)m_it;
+}
+
+struct iterator *map_rbegin(struct map *map)
+{
+        if (!map)
+                return NULL;
+
+        struct map_it *m_it =
+                        map_it_create(map, map->bucket_count - 1, &map_rit_cbs);
+        if (!m_it)
+                return NULL;
+
+        /* Looking for the first valid node starting from the last bucket */
+        m_it->node = &map->bucket_list[map->bucket_count - 1];
+        map_it_seek_previous(m_it);
+
+        return (struct iterator *)m_it;
+}
+
+struct iterator *map_rend(struct map *map)
+{
+        if (!map)
+                return NULL;
+
+        struct map_it *m_it = map_it_create(map, 0, &map_rit_cbs);
+        if (!m_it)
+                return NULL;
+
+        /* Looking for the first valid node starting from the first bucket */
+        m_it->node = &map->bucket_list[0];
+        map_it_seek_next(m_it);
 
         return (struct iterator *)m_it;
 }

@@ -169,4 +169,21 @@ struct iterator *vector_begin(const void *vector);
  */
 struct iterator *vector_end(const void *vector);
 
+/**
+ * @brief Creates a reverse iterator over the last element of 'vector'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'vector' is invalid or on failure.
+ */
+struct iterator *vector_rbegin(const void *vector);
+
+/**
+ * @brief Creates a reverse iterator over the first element of 'vector'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'vector' is invalid or on failure.
+ */
+struct iterator *vector_rend(const void *vector);
+
+
 #endif /* LIB_VECTORS_H */

@@ -84,4 +84,20 @@ const struct type_info *it_type(const struct iterator *it);
  */
 int it_remove(struct iterator *it);
 
+/**
+ * @brief Returns a duplicate of 'it'.
+ *
+ * @return A duplicate of 'it' on success.
+ * @return NULL on failure.
+ */
+struct iterator *it_dup(struct iterator *it);
+
+/**
+ * @brief Makes 'dest' identical to 'src'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'dest' or 'src' are invalid.
+ */
+int it_copy(struct iterator *dest, const struct iterator *src);
+
 #endif /* LIB_ITERATORS_H */

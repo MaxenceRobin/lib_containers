@@ -195,6 +195,28 @@ ssize_t list_len(const struct list *list)
 
 /* Iterator API --------------------------------------------------------------*/
 
+static struct iterator_callbacks list_it_cbs;
+static struct iterator_callbacks list_rit_cbs;
+
+/* Utiilty functions -----------------*/
+
+static struct list_it *list_it_create(
+                const struct list *list,
+                struct node *node,
+                const struct iterator_callbacks *cbs)
+{
+        struct list_it *l_it = malloc(sizeof(*l_it));
+        if (!l_it)
+                return NULL;
+
+        it_init(&l_it->it, &list_it_cbs);
+        l_it->list = list;
+        l_it->node = node;
+        l_it->it.cbs = cbs;
+
+        return l_it;
+}
+
 /* Iterator implementation -----------*/
 
 static int list_it_next(struct iterator *it)
@@ -239,9 +261,47 @@ static int list_it_remove(struct iterator *it)
 
         struct list_it *l_it = (struct list_it *)it;
         struct node *next = l_it->node->next;
+
         remove_node(l_it->node);
         l_it->node = next;
 
+        return 0;
+}
+
+static int list_rit_remove(struct iterator *it)
+{
+        if (!list_it_is_valid)
+                return -EINVAL;
+
+        struct list_it *l_it = (struct list_it *)it;
+        struct node *next = l_it->node->previous;
+
+        remove_node(l_it->node);
+        l_it->node = next;
+
+        return 0;
+}
+
+static struct iterator *list_it_dup(struct iterator *it)
+{
+        struct list_it *l_it = (struct list_it *)it;
+        if (!list_it_is_valid(it))
+                return NULL;
+
+        struct list_it *dup =
+                        list_it_create(l_it->list, l_it->node, l_it->it.cbs);
+        return (struct iterator *)dup;
+}
+
+static int list_it_copy(struct iterator *dest, const struct iterator *src)
+{
+        struct list_it *l_dest = (struct list_it *)dest;
+        const struct list_it *l_src = (const struct list_it *)src;
+
+        if (l_dest->list != l_src->list)
+                return -EINVAL;
+
+        l_dest->node = l_src->node;
         return 0;
 }
 
@@ -258,22 +318,22 @@ static struct iterator_callbacks list_it_cbs = {
         .data_cb = list_it_data,
         .type_cb = list_it_type,
         .remove_cb = list_it_remove,
+        .dup_cb = list_it_dup,
+        .copy_cb = list_it_copy,
         .destroy_cb = list_it_destroy
 };
 
-/* Static functions ------------------*/
-
-static struct list_it *list_it_create(const struct list *list)
-{
-        struct list_it *l_it = malloc(sizeof(*l_it));
-        if (!l_it)
-                return NULL;
-
-        it_init(&l_it->it, &list_it_cbs);
-        l_it->list = list;
-
-        return l_it;
-}
+static struct iterator_callbacks list_rit_cbs = {
+        .next_cb = list_it_previous,
+        .previous_cb = list_it_next,
+        .is_valid_cb = list_it_is_valid,
+        .data_cb = list_it_data,
+        .type_cb = list_it_type,
+        .remove_cb = list_rit_remove,
+        .dup_cb = list_it_dup,
+        .copy_cb = list_it_copy,
+        .destroy_cb = list_it_destroy
+};
 
 /* Public API ------------------------*/
 
@@ -282,11 +342,11 @@ struct iterator *list_begin(const struct list *list)
         if (!list)
                 return NULL;
 
-        struct list_it *l_it = list_it_create(list);
+        struct list_it *l_it =
+                        list_it_create(list, list->node.next, &list_it_cbs);
         if (!l_it)
                 return NULL;
 
-        l_it->node = list->node.next;
         return (struct iterator *)l_it;
 }
 
@@ -295,10 +355,36 @@ struct iterator *list_end(const struct list *list)
         if (!list)
                 return NULL;
 
-        struct list_it *l_it = list_it_create(list);
+        struct list_it *l_it =
+                        list_it_create(list, list->node.previous, &list_it_cbs);
         if (!l_it)
                 return NULL;
 
-        l_it->node = list->node.previous;
+        return (struct iterator *)l_it;
+}
+
+struct iterator *list_rbegin(const struct list *list)
+{
+        if (!list)
+                return NULL;
+
+        struct list_it *l_it = list_it_create(
+                        list, list->node.previous, &list_rit_cbs);
+        if (!l_it)
+                return NULL;
+
+        return (struct iterator *)l_it;
+}
+
+struct iterator *list_rend(const struct list *list)
+{
+        if (!list)
+                return NULL;
+
+        struct list_it *l_it =
+                        list_it_create(list, list->node.next, &list_rit_cbs);
+        if (!l_it)
+                return NULL;
+
         return (struct iterator *)l_it;
 }

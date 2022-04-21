@@ -371,6 +371,27 @@ ssize_t vector_capacity(const void *vector)
 
 /* Iterator API --------------------------------------------------------------*/
 
+static struct iterator_callbacks vector_it_cbs;
+static struct iterator_callbacks vector_rit_cbs;
+
+/* Utility functions -----------------*/
+
+static struct vector_it *vector_it_create(
+                struct meta *meta,
+                int pos,
+                const struct iterator_callbacks *cbs)
+{
+        struct vector_it *v_it = malloc(sizeof(*v_it));
+        if (!v_it)
+                return NULL;
+
+        it_init(&v_it->it, cbs);
+        v_it->meta = meta;
+        v_it->pos = pos;
+
+        return v_it;
+}
+
 /* Iterator implementation -----------*/
 
 static int vector_it_next(struct iterator *it)
@@ -419,6 +440,41 @@ static int vector_it_remove(struct iterator *it)
         return 0;
 }
 
+static int vector_rit_remove(struct iterator *it)
+{
+        if (!vector_it_is_valid(it))
+                return -EINVAL;
+
+        struct vector_it *v_it = (struct vector_it *)it;
+        remove_element(v_it->meta, v_it->pos);
+        --v_it->pos;
+
+        return 0;
+}
+
+static struct iterator *vector_it_dup(struct iterator *it)
+{
+        struct vector_it *v_it = (struct vector_it *)it;
+        if (!vector_it_is_valid(it))
+                return NULL;
+
+        struct vector_it *dup =
+                        vector_it_create(v_it->meta, v_it->pos, v_it->it.cbs);
+        return (struct iterator *)dup;
+}
+
+static int vector_it_copy(struct iterator *dest, const struct iterator *src)
+{
+        struct vector_it *v_dest = (struct vector_it *)dest;
+        const struct vector_it *v_src = (const struct vector_it *)src;
+
+        if (v_dest->meta != v_src->meta)
+                return -EINVAL;
+
+        v_dest->pos = v_src->pos;
+        return 0;
+}
+
 static void vector_it_destroy(struct iterator *it)
 {
         struct vector_it *v_it = (struct vector_it *)it;
@@ -432,22 +488,22 @@ static struct iterator_callbacks vector_it_cbs = {
         .data_cb = vector_it_data,
         .type_cb = vector_it_type,
         .remove_cb = vector_it_remove,
+        .dup_cb = vector_it_dup,
+        .copy_cb = vector_it_copy,
         .destroy_cb = vector_it_destroy
 };
 
-/* Static functions ------------------*/
-
-struct vector_it *vector_it_create(struct meta *meta)
-{
-        struct vector_it *v_it = malloc(sizeof(*v_it));
-        if (!v_it)
-                return NULL;
-
-        it_init(&v_it->it, &vector_it_cbs);
-        v_it->meta = meta;
-
-        return v_it;
-}
+static struct iterator_callbacks vector_rit_cbs = {
+        .next_cb = vector_it_previous,
+        .previous_cb = vector_it_next,
+        .is_valid_cb = vector_it_is_valid,
+        .data_cb = vector_it_data,
+        .type_cb = vector_it_type,
+        .remove_cb = vector_rit_remove,
+        .dup_cb = vector_it_dup,
+        .copy_cb = vector_it_copy,
+        .destroy_cb = vector_it_destroy
+};
 
 /* Public API ------------------------*/
 
@@ -457,11 +513,10 @@ struct iterator *vector_begin(const void *vector)
         if (!meta)
                 return NULL;
 
-        struct vector_it *v_it = vector_it_create(meta);
+        struct vector_it *v_it = vector_it_create(meta, 0, &vector_it_cbs);
         if (!v_it)
                 return NULL;
 
-        v_it->pos = 0;
         return (struct iterator *)v_it;
 }
 
@@ -471,10 +526,37 @@ struct iterator *vector_end(const void *vector)
         if (!meta)
                 return NULL;
 
-        struct vector_it *v_it = vector_it_create(meta);
+        struct vector_it *v_it =
+                        vector_it_create(meta, meta->len - 1, &vector_it_cbs);
         if (!v_it)
                 return NULL;
 
-        v_it->pos = meta->len - 1;
+        return (struct iterator *)v_it;
+}
+
+struct iterator *vector_rbegin(const void *vector)
+{
+        struct meta *meta = vector_to_meta(vector);
+        if (!meta)
+                return NULL;
+
+        struct vector_it *v_it =
+                        vector_it_create(meta, meta->len - 1, &vector_rit_cbs);
+        if (!v_it)
+                return NULL;
+
+        return (struct iterator *)v_it;
+}
+
+struct iterator *vector_rend(const void *vector)
+{
+        struct meta *meta = vector_to_meta(vector);
+        if (!meta)
+                return NULL;
+
+        struct vector_it *v_it = vector_it_create(meta, 0, &vector_rit_cbs);
+        if (!v_it)
+                return NULL;
+
         return (struct iterator *)v_it;
 }

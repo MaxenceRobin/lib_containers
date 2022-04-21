@@ -90,3 +90,19 @@ int it_remove(struct iterator *it)
 
         return it->cbs->remove_cb(it);
 }
+
+struct iterator *it_dup(struct iterator *it)
+{
+        if (!it)
+                return NULL;
+
+        return it->cbs->dup_cb(it);
+}
+
+int it_copy(struct iterator *dest, const struct iterator *src)
+{
+        if (!dest || !src)
+                return -EINVAL;
+
+        return dest->cbs->copy_cb(dest, src);
+}
