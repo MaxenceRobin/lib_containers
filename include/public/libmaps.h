@@ -124,15 +124,4 @@ struct iterator *map_rbegin(struct map *map);
  */
 struct iterator *map_rend(struct map *map);
 
-/**
- * @brief Returns the pair pointed by 'it".
- *
- * @return Pointer on the pair on success.
- * @return NULL if 'it' is invalid.
- *
- * @warning 'it' must have been created from a map, otherwise undefined
- * behavior will happen.
- */
-struct pair *map_pair_from_it(const struct iterator *it);
-
 #endif /* LIB_MAPS_H */

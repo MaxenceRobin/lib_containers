@@ -419,7 +419,7 @@ static void *map_it_data(const struct iterator *it)
         if (!m_it->node)
                 return NULL;
 
-        return m_it->node->pair.value;
+        return &m_it->node->pair;
 }
 
 static const struct type_info *map_id_type(const struct iterator *it)
@@ -578,13 +578,4 @@ struct iterator *map_rend(struct map *map)
         map_it_seek_next(m_it);
 
         return (struct iterator *)m_it;
-}
-
-struct pair *map_pair_from_it(const struct iterator *it)
-{
-        const struct map_it *m_it = (const struct map_it *)it;
-        if (!m_it || !m_it->node)
-                return NULL;
-
-        return &m_it->node->pair;
 }
