@@ -146,7 +146,7 @@ int buffer_clear(struct buffer *buffer)
         return 0;
 }
 
-void *buffer_data(const struct buffer *buffer)
+const void *buffer_data(const struct buffer *buffer)
 {
         if (!buffer)
                 return NULL;

@@ -20,9 +20,9 @@ typedef bool (*it_is_valid_cb)(const struct iterator *);
 typedef void *(*it_data_cb)(const struct iterator *);
 typedef const struct type_info *(*it_type_cb)(const struct iterator *);
 typedef int (*it_remove_cb)(struct iterator *);
-typedef struct iterator *(*it_dup_cb)(struct iterator *);
+typedef struct iterator *(*it_dup_cb)(const struct iterator *);
 typedef int (*it_copy_cb)(struct iterator *, const struct iterator *);
-typedef void (*it_destroy_cb)(struct iterator *);
+typedef void (*it_destroy_cb)(const struct iterator *);
 
 struct iterator_callbacks {
         it_next_cb next_cb;

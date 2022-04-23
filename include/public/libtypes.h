@@ -15,8 +15,8 @@
 
 typedef void (*type_copy_cb)(void *, const void *);
 typedef int (*type_comp_cb)(const void *, const void *);
-typedef void (*type_destroy_cb)(void *);
 typedef unsigned long (*type_hash_cb)(const void *);
+typedef void (*type_destroy_cb)(const void *);
 
 /**
  * @brief Callbacks for types manipulation.
@@ -33,8 +33,8 @@ struct type_info {
         size_t size;
         type_copy_cb copy;
         type_comp_cb comp;
-        type_destroy_cb destroy;
         type_hash_cb hash;
+        type_destroy_cb destroy;
 };
 
 struct type_pointer {
@@ -81,6 +81,6 @@ const struct type_info *type_string(bool auto_free);
 /**
  * @brief Default destroy function. The default behavior is to do nothing.
  */
-void type_default_destroy(void *);
+void type_default_destroy(const void *);
 
 #endif /* LIB_TYPES_H */

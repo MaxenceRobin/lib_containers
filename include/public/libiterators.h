@@ -90,7 +90,7 @@ int it_remove(struct iterator *it);
  * @return A duplicate of 'it' on success.
  * @return NULL on failure.
  */
-struct iterator *it_dup(struct iterator *it);
+struct iterator *it_dup(const struct iterator *it);
 
 /**
  * @brief Makes 'dest' identical to 'src'.

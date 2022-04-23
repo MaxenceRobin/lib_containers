@@ -282,9 +282,9 @@ static int list_rit_remove(struct iterator *it)
         return 0;
 }
 
-static struct iterator *list_it_dup(struct iterator *it)
+static struct iterator *list_it_dup(const struct iterator *it)
 {
-        struct list_it *l_it = (struct list_it *)it;
+        const struct list_it *l_it = (const struct list_it *)it;
         if (!list_it_is_valid(it))
                 return NULL;
 
@@ -305,7 +305,7 @@ static int list_it_copy(struct iterator *dest, const struct iterator *src)
         return 0;
 }
 
-static void list_it_destroy(struct iterator *it)
+static void list_it_destroy(const struct iterator *it)
 {
         struct list_it *l_it = (struct list_it *)it;
         free(l_it);

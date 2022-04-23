@@ -96,7 +96,7 @@ DECL_TYPE_NO_HASH(float, float)
 DECL_TYPE_NO_HASH(double, double)
 DECL_TYPE_NO_HASH(long_double, long double)
 
-void type_default_destroy(void *data)
+void type_default_destroy(const void *data)
 {
 }
 
@@ -120,9 +120,9 @@ static int comp_pointer(const void *first, const void *second)
         return a->pointer - b->pointer;
 }
 
-static void destroy_pointer(void *data)
+static void destroy_pointer(const void *data)
 {
-        struct type_pointer *value = data;
+        const struct type_pointer *value = data;
         free(value->pointer);
 }
 
@@ -189,9 +189,9 @@ static unsigned long hash_string(const void *data)
         return hash;
 }
 
-static void destroy_string(void *data)
+static void destroy_string(const void *data)
 {
-        struct type_string *value = data;
+        const struct type_string *value = data;
         free(value->string);
 }
 

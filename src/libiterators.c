@@ -91,7 +91,7 @@ int it_remove(struct iterator *it)
         return it->cbs->remove_cb(it);
 }
 
-struct iterator *it_dup(struct iterator *it)
+struct iterator *it_dup(const struct iterator *it)
 {
         if (!it)
                 return NULL;

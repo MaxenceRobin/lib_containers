@@ -17,8 +17,13 @@
 
 #define DEFAULT_BUCKET_LIST_COUNT 16
 
+struct m_pair {
+        void *key;
+        void *value;
+};
+
 struct node {
-        struct pair pair;
+        struct m_pair pair;
         unsigned long hash;
         struct node *next;
         struct node *previous;
@@ -289,7 +294,7 @@ struct pair *map_pair(const struct map *map, const void *key)
                 return NULL;
 
         struct node *node = get_node_from_map(map, key);
-        return (node ? &node->pair : NULL);
+        return (struct pair *)(node ? &node->pair : NULL);
 }
 
 int map_remove(struct map *map, const void *key)
@@ -369,7 +374,7 @@ static void map_it_seek_previous(struct map_it *m_it)
 }
 
 static struct map_it *map_it_create(
-                struct map *map,
+                const struct map *map,
                 int bucket_pos,
                 const struct iterator_callbacks *cbs)
 {
@@ -378,7 +383,7 @@ static struct map_it *map_it_create(
                 return NULL;
 
         it_init(&m_it->it, &map_it_cbs);
-        m_it->map = map;
+        m_it->map = (struct map *)map;
         m_it->bucket_pos = bucket_pos;
         m_it->it.cbs = cbs;
 
@@ -454,9 +459,9 @@ static int map_rit_remove(struct iterator *it)
         return 0;
 }
 
-static struct iterator *map_it_dup(struct iterator *it)
+static struct iterator *map_it_dup(const struct iterator *it)
 {
-        struct map_it *m_it = (struct map_it *)it;
+        const struct map_it *m_it = (const struct map_it *)it;
         if (!m_it->node)
                 return NULL;
 
@@ -482,7 +487,7 @@ static int map_it_copy(struct iterator *dest, const struct iterator *src)
         return 0;
 }
 
-static void map_it_destroy(struct iterator *it)
+static void map_it_destroy(const struct iterator *it)
 {
         struct map_it *m_it = (struct map_it *)it;
         free(m_it);
@@ -514,7 +519,7 @@ static struct iterator_callbacks map_rit_cbs = {
 
 /* Public API ------------------------*/
 
-struct iterator *map_begin(struct map *map)
+struct iterator *map_begin(const struct map *map)
 {
         if (!map)
                 return NULL;
@@ -530,7 +535,7 @@ struct iterator *map_begin(struct map *map)
         return (struct iterator *)m_it;
 }
 
-struct iterator *map_end(struct map *map)
+struct iterator *map_end(const struct map *map)
 {
         if (!map)
                 return NULL;
@@ -547,7 +552,7 @@ struct iterator *map_end(struct map *map)
         return (struct iterator *)m_it;
 }
 
-struct iterator *map_rbegin(struct map *map)
+struct iterator *map_rbegin(const struct map *map)
 {
         if (!map)
                 return NULL;
@@ -564,7 +569,7 @@ struct iterator *map_rbegin(struct map *map)
         return (struct iterator *)m_it;
 }
 
-struct iterator *map_rend(struct map *map)
+struct iterator *map_rend(const struct map *map)
 {
         if (!map)
                 return NULL;

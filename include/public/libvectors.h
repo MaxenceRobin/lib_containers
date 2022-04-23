@@ -77,20 +77,6 @@ void *vector_insert(void *vector, unsigned int pos, const void *data, int *ret);
 int vector_remove(void *vector, unsigned int pos);
 
 /**
- * @brief Modifies the length of 'vector' to 'size' elements, reallocating
- * 'vector' if needed.
- *
- * @return Pointer to a valid vector, if it was modified or not.
- *
- * @note If 'ret' is not NULL, its value will be modified to indicate if the
- * operation was successful or not :
- *      0 on success.
- *      -EINVAL if 'vector' is invalid.
- *      -ENOMEM if 'vector' could not be resized.
- */
-void *vector_resize(void *vector, size_t size, int *ret);
-
-/**
  * @brief Sorts 'vector' in ascending order.
  *
  * @return 0 on success.
@@ -107,6 +93,37 @@ int vector_sort(void *vector);
 int vector_clear(void *vector);
 
 /**
+ * @brief Returns the number of elements of 'vector'.
+ *
+ * @return The number of elements of 'vector' on success.
+ * @return -EINVAL if 'vector' is invalid.
+ */
+ssize_t vector_len(const void *vector);
+
+/**
+ * @brief Modifies the length of 'vector' to 'size' elements, reallocating
+ * 'vector' if needed.
+ *
+ * @return Pointer to a valid vector, if it was modified or not.
+ *
+ * @note If 'ret' is not NULL, its value will be modified to indicate if the
+ * operation was successful or not :
+ *      0 on success.
+ *      -EINVAL if 'vector' is invalid.
+ *      -ENOMEM if 'vector' could not be resized.
+ */
+void *vector_set_len(void *vector, size_t size, int *ret);
+
+/**
+ * @brief Returns the number of elements that 'vector' can hold without
+ * reallocating memory.
+ *
+ * @return The capacity of 'vector' on success.
+ * @return -EINVAL if 'vector' is invalid.
+ */
+ssize_t vector_capacity(const void *vector);
+
+/**
  * @brief Allocates enough memory for 'vector' to contain 'count' elements
  * without changing its length. If 'count' is lower than the current capacity
  * of 'vector', this function does nothing.
@@ -119,7 +136,7 @@ int vector_clear(void *vector);
  *      -EINVAL if 'vector' is invalid.
  *      -ENOMEM if the reallocation failed.
  */
-void *vector_reserve(void *vector, size_t count, int *ret);
+void *vector_set_capacity(void *vector, size_t count, int *ret);
 
 /**
  * @brief Reallocates 'vector' in order for its capacity to match its lenght.
@@ -133,23 +150,6 @@ void *vector_reserve(void *vector, size_t count, int *ret);
  *      -ENOMEM if the reallocation failed.
  */
 void *vector_fit(void *vector, int *ret);
-
-/**
- * @brief Returns the number of elements of 'vector'.
- *
- * @return The number of elements of 'vector' on success.
- * @return -EINVAL if 'vector' is invalid.
- */
-ssize_t vector_len(const void *vector);
-
-/**
- * @brief Returns the number of elements that 'vector' can hold without
- * reallocating memory.
- *
- * @return The capacity of 'vector' on success.
- * @return -EINVAL if 'vector' is invalid.
- */
-ssize_t vector_capacity(const void *vector);
 
 /* Iterator API --------------------------------------------------------------*/
 

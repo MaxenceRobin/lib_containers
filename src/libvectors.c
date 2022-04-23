@@ -274,24 +274,6 @@ int vector_remove(void *vector, unsigned int pos)
         return 0;
 }
 
-void *vector_resize(void *vector, size_t size, int *ret)
-{
-        int res = 0;
-
-        struct meta *meta = vector_to_meta(vector);
-        if (!meta) {
-                res = -EINVAL;
-                goto error_args;
-        }
-
-        meta = set_len(meta, size, &res);
-error_args:
-        if (ret)
-                *ret = res;
-
-        return meta_to_vector(meta);
-}
-
 int vector_sort(void *vector)
 {
         const struct meta *meta = vector_to_meta(vector);
@@ -314,7 +296,43 @@ int vector_clear(void *vector)
         return 0;
 }
 
-void *vector_reserve(void *vector, size_t count, int *ret)
+ssize_t vector_len(const void *vector)
+{
+        const struct meta *meta = vector_to_meta(vector);
+        if (!meta)
+                return -EINVAL;
+
+        return (ssize_t)meta->len;
+}
+
+void *vector_set_len(void *vector, size_t size, int *ret)
+{
+        int res = 0;
+
+        struct meta *meta = vector_to_meta(vector);
+        if (!meta) {
+                res = -EINVAL;
+                goto error_args;
+        }
+
+        meta = set_len(meta, size, &res);
+error_args:
+        if (ret)
+                *ret = res;
+
+        return meta_to_vector(meta);
+}
+
+ssize_t vector_capacity(const void *vector)
+{
+        const struct meta *meta = vector_to_meta(vector);
+        if (!meta)
+                return -EINVAL;
+
+        return (ssize_t)meta->capacity;
+}
+
+void *vector_set_capacity(void *vector, size_t count, int *ret)
 {
         int res = 0;
 
@@ -349,24 +367,6 @@ error_args:
                 *ret = res;
 
         return meta_to_vector(meta);
-}
-
-ssize_t vector_len(const void *vector)
-{
-        const struct meta *meta = vector_to_meta(vector);
-        if (!meta)
-                return -EINVAL;
-
-        return (ssize_t)meta->len;
-}
-
-ssize_t vector_capacity(const void *vector)
-{
-        const struct meta *meta = vector_to_meta(vector);
-        if (!meta)
-                return -EINVAL;
-
-        return (ssize_t)meta->capacity;
 }
 
 /* Iterator API --------------------------------------------------------------*/
@@ -452,9 +452,9 @@ static int vector_rit_remove(struct iterator *it)
         return 0;
 }
 
-static struct iterator *vector_it_dup(struct iterator *it)
+static struct iterator *vector_it_dup(const struct iterator *it)
 {
-        struct vector_it *v_it = (struct vector_it *)it;
+        const struct vector_it *v_it = (const struct vector_it *)it;
         if (!vector_it_is_valid(it))
                 return NULL;
 
@@ -475,7 +475,7 @@ static int vector_it_copy(struct iterator *dest, const struct iterator *src)
         return 0;
 }
 
-static void vector_it_destroy(struct iterator *it)
+static void vector_it_destroy(const struct iterator *it)
 {
         struct vector_it *v_it = (struct vector_it *)it;
         free(v_it);
