@@ -177,7 +177,7 @@ void *vector_create(const struct type_info *type, size_t count)
         if (type->size == 0 || !type->copy || !type->comp || !type->destroy)
                 return NULL;
 
-        struct meta *meta = malloc(sizeof(*meta) + count * type->size);
+        struct meta *meta = calloc(1, sizeof(*meta) + count * type->size);
         if (!meta)
                 return NULL;
 
@@ -381,7 +381,7 @@ static struct vector_it *vector_it_create(
                 int pos,
                 const struct iterator_callbacks *cbs)
 {
-        struct vector_it *v_it = malloc(sizeof(*v_it));
+        struct vector_it *v_it = calloc(1, sizeof(*v_it));
         if (!v_it)
                 return NULL;
 

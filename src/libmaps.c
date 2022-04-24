@@ -54,16 +54,16 @@ static struct node *create_node(
                 const struct type_info *key_type,
                 const struct type_info *value_type)
 {
-        struct node *node = malloc(sizeof(*node));
+        struct node *node = calloc(1, sizeof(*node));
         if (!node)
                 goto error_alloc_node;
 
-        node->pair.key = malloc(key_type->size);
+        node->pair.key = calloc(1, key_type->size);
         if (!node->pair.key)
                 goto error_alloc_key;
 
         key_type->copy(node->pair.key, key);
-        node->pair.value = malloc(value_type->size);
+        node->pair.value = calloc(1, value_type->size);
         if (!node->pair.value)
                 goto error_alloc_value;
 
@@ -100,7 +100,7 @@ static struct node *create_bucket_list(size_t count)
         struct node *bucket_list;
         const size_t bucket_list_size = sizeof(*bucket_list) * count;
 
-        bucket_list = malloc(bucket_list_size);
+        bucket_list = calloc(1, bucket_list_size);
         if (!bucket_list)
                 return NULL;
 
@@ -225,7 +225,7 @@ struct map *map_create(
                         || !value_type->destroy)
                 return NULL;
 
-        struct map *map = malloc(sizeof(*map));
+        struct map *map = calloc(1, sizeof(*map));
         if (!map)
                 return NULL;
 
@@ -378,7 +378,7 @@ static struct map_it *map_it_create(
                 int bucket_pos,
                 const struct iterator_callbacks *cbs)
 {
-        struct map_it *m_it = malloc(sizeof(*m_it));
+        struct map_it *m_it = calloc(1, sizeof(*m_it));
         if (!m_it)
                 return NULL;
 

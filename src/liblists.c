@@ -47,11 +47,11 @@ struct list_it {
 static struct node *insert_node(
                 struct list *list, struct node *previous, const void *value)
 {
-        struct node *node = malloc(sizeof(*node));
+        struct node *node = calloc(1, sizeof(*node));
         if (!node)
                 return NULL;
 
-        node->data = malloc(list->type->size);
+        node->data = calloc(1, list->type->size);
         if (!node->data) {
                 free(node);
                 return NULL;
@@ -99,7 +99,7 @@ struct list *list_create(const struct type_info *type)
         if (type->size == 0 || !type->copy || !type->destroy)
                 return NULL;
 
-        struct list *list = malloc(sizeof(*list));
+        struct list *list = calloc(1, sizeof(*list));
         if (!list)
                 return NULL;
 
@@ -205,7 +205,7 @@ static struct list_it *list_it_create(
                 struct node *node,
                 const struct iterator_callbacks *cbs)
 {
-        struct list_it *l_it = malloc(sizeof(*l_it));
+        struct list_it *l_it = calloc(1, sizeof(*l_it));
         if (!l_it)
                 return NULL;
 

@@ -70,7 +70,7 @@ struct buffer *buffer_create(const struct type_info *type, size_t count)
         if (type->size == 0 || !type->copy || !type->destroy)
                 return NULL;
 
-        struct buffer *buffer = malloc(sizeof(*buffer) + type->size * count);
+        struct buffer *buffer = calloc(1, sizeof(*buffer) + type->size * count);
         if (!buffer)
                 return NULL;
 
