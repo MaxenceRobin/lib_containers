@@ -3,7 +3,7 @@
 Libcontainers is a simple containers manipulation library. It provides basic
 data structures :
 
-- Vectors
+- Dynamic arrays
 - Doubly linked lists
 - Circular buffers
 - Hash maps
