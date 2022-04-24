@@ -88,7 +88,8 @@ void main()
 {
         int *vector = vector_create(type_int(), 10);
         struct list *list = list_create(type_int());
-        struct map *map = map_create(type_string(true), type_int());
+        struct map *map = map_create(
+                        type_string(DESTROY_POLICY_AUTO_FREE), type_int());
 
         char key[8];
         for (int i = 0; i < 10; ++i) {
@@ -123,6 +124,7 @@ void main()
 
         vector_destroy(vector);
         list_destroy(list);
+        map_destroy(map);
 }
 ```
 

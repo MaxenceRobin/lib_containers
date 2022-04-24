@@ -45,6 +45,11 @@ struct type_string {
         char *string;
 };
 
+enum type_destroy_policy {
+        DESTROY_POLICY_AUTO_FREE,
+        DESTROY_POLICY_NO_FREE
+};
+
 /* API -----------------------------------------------------------------------*/
 
 const struct type_info *type_char();
@@ -67,16 +72,18 @@ const struct type_info *type_double();
 const struct type_info *type_long_double();
 
 /**
- * @param auto_free : If 'true', the address pointed by the pointer will be
- * automatically free()'d on destruction. If 'false' nothing will be done.
+ * @param policy : If DESTROY_POLICY_AUTO_FREE, the address pointed by the
+ * pointer will be automatically free()'s on destruction. Otherwise nothing will
+ * be done.
  */
-const struct type_info *type_pointer(bool auto_free);
+const struct type_info *type_pointer(enum type_destroy_policy policy);
 
 /**
- * @param auto_free : If 'true', the address pointed by the pointer will be
- * automatically free()'d on destruction. If 'false' nothing will be done.
+ * @param policy : If DESTROY_POLICY_AUTO_FREE, the address pointed by the
+ * pointer will be automatically free()'s on destruction. Otherwise nothing will
+ * be done.
  */
-const struct type_info *type_string(bool auto_free);
+const struct type_info *type_string(enum type_destroy_policy policy);
 
 /**
  * @brief Default destroy function. The default behavior is to do nothing.

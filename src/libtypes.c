@@ -142,9 +142,10 @@ static struct type_info info_auto_pointer = {
         .destroy = destroy_pointer
 };
 
-const struct type_info *type_pointer(bool auto_free)
+const struct type_info *type_pointer(enum type_destroy_policy policy)
 {
-        return (auto_free ? &info_auto_pointer : &info_pointer);
+        return (policy == DESTROY_POLICY_AUTO_FREE ?
+                        &info_auto_pointer : &info_pointer);
 }
 
 /* String ----------------------------*/
@@ -211,7 +212,8 @@ static struct type_info info_auto_string = {
         .destroy = destroy_string
 };
 
-const struct type_info *type_string(bool auto_free)
+const struct type_info *type_string(enum type_destroy_policy policy)
 {
-        return (auto_free ? &info_auto_string : &info_string);
+        return (policy == DESTROY_POLICY_AUTO_FREE ?
+                        &info_auto_string : &info_string);
 }

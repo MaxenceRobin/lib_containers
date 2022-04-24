@@ -44,7 +44,8 @@ static void print_map(const struct map *map)
 
 void main()
 {
-        struct map *map = map_create(type_string(false), type_int());
+        struct map *map = map_create(
+                        type_string(DESTROY_POLICY_NO_FREE), type_int());
 
         map_add(map, STR("CPU"), INT(300));
         map_add(map, STR("GPU"), INT(1100));
