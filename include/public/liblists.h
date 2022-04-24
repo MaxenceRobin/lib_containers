@@ -52,11 +52,20 @@ int list_push_front(struct list *list, const void *value);
 int list_push_back(struct list *list, const void *value);
 
 /**
+ * @brief Inserts 'value' inside 'list' at the position pointed by 'it'.
+ * 'it' points to the newly inserted value after the call.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'list', 'it' or 'value' are invalid.
+ * @return -ENOMEM on failure.
+ */
+int list_insert(struct list *list, struct iterator *it, const void *value);
+
+/**
  * @brief Removes the first element of 'list'.
  *
  * @return 0 on success.
  * @return -EINVAL if 'list' is invalid.
- * @return -ENOMEM on failure.
  */
 int list_pop_front(struct list *list);
 
@@ -65,7 +74,6 @@ int list_pop_front(struct list *list);
  *
  * @return 0 on success.
  * @return -EINVAL if 'list' is invalid.
- * @return -ENOMEM on failure.
  */
 int list_pop_back(struct list *list);
 
@@ -94,5 +102,21 @@ struct iterator *list_begin(const struct list *list);
  * @return NULL if 'list' is invalid or on failure.
  */
 struct iterator *list_end(const struct list *list);
+
+/**
+ * @brief Creates a reverse iterator over the last element of 'list'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'list' is invalid or on failure.
+ */
+struct iterator *list_rbegin(const struct list *list);
+
+/**
+ * @brief Creates a reverse iterator over the first element of 'list'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'list' is invalid or on failure.
+ */
+struct iterator *list_rend(const struct list *list);
 
 #endif /* LIB_LISTS_H */

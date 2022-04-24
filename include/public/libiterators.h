@@ -8,6 +8,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "libtypes.h"
+
 #include <stdbool.h>
 
 /* Definition ----------------------------------------------------------------*/
@@ -64,5 +66,38 @@ bool it_is_valid(const struct iterator *it);
  * @return NULL if 'it' is invalid.
  */
 void *it_data(const struct iterator *it);
+
+/**
+ * @brief Returns the type_info of 'it".
+ *
+ * @return Pointer to the type_info on success.
+ * @return NULL if 'it' is invalid.
+ */
+const struct type_info *it_type(const struct iterator *it);
+
+/**
+ * @brief Removes the value pointed by 'it'. After the call 'it' points to the
+ * next element of the removed one.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' is invalid.
+ */
+int it_remove(struct iterator *it);
+
+/**
+ * @brief Returns a duplicate of 'it'.
+ *
+ * @return A duplicate of 'it' on success.
+ * @return NULL on failure.
+ */
+struct iterator *it_dup(const struct iterator *it);
+
+/**
+ * @brief Makes 'dest' identical to 'src'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'dest' or 'src' are invalid.
+ */
+int it_copy(struct iterator *dest, const struct iterator *src);
 
 #endif /* LIB_ITERATORS_H */

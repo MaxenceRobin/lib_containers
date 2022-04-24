@@ -78,7 +78,7 @@ int buffer_clear(struct buffer *buffer);
  * @return Pointer to the value on success.
  * @return NULL if 'buffer' is invalid or if 'buffer' is empty.
  */
-void *buffer_data(const struct buffer *buffer);
+const void *buffer_data(const struct buffer *buffer);
 
 /**
  * @brief Indicates if 'buffer' is empty.

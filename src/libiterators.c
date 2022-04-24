@@ -74,3 +74,35 @@ void *it_data(const struct iterator *it)
 
         return it->cbs->data_cb(it);
 }
+
+const struct type_info *it_type(const struct iterator *it)
+{
+        if (!it)
+                return NULL;
+
+        return it->cbs->type_cb(it);
+}
+
+int it_remove(struct iterator *it)
+{
+        if (!it)
+                return -EINVAL;
+
+        return it->cbs->remove_cb(it);
+}
+
+struct iterator *it_dup(const struct iterator *it)
+{
+        if (!it)
+                return NULL;
+
+        return it->cbs->dup_cb(it);
+}
+
+int it_copy(struct iterator *dest, const struct iterator *src)
+{
+        if (!dest || !src)
+                return -EINVAL;
+
+        return dest->cbs->copy_cb(dest, src);
+}

@@ -12,6 +12,7 @@ set(SOURCES
         src/libvectors.c
         src/libmaps.c
         src/libiterators.c
+        src/libcontainer_algos.c
 )
 
 set(PUBLIC_HEADERS
