@@ -39,6 +39,7 @@ struct map {
 
 struct map_it {
         struct iterator it; /* Placed at top for inheritance */
+        enum map_it_type type;
         struct map *map;
         int bucket_pos;
         struct node *node;
@@ -376,13 +377,15 @@ static void map_it_seek_previous(struct map_it *m_it)
 static struct map_it *map_it_create(
                 const struct map *map,
                 int bucket_pos,
-                const struct iterator_callbacks *cbs)
+                const struct iterator_callbacks *cbs,
+                enum map_it_type type)
 {
         struct map_it *m_it = calloc(1, sizeof(*m_it));
         if (!m_it)
                 return NULL;
 
         it_init(&m_it->it, &map_it_cbs);
+        m_it->type = type;
         m_it->map = (struct map *)map;
         m_it->bucket_pos = bucket_pos;
         m_it->it.cbs = cbs;
@@ -424,7 +427,8 @@ static void *map_it_data(const struct iterator *it)
         if (!m_it->node)
                 return NULL;
 
-        return &m_it->node->pair;
+        struct m_pair *pair = &m_it->node->pair;
+        return (m_it->type == MAP_IT_VALUE ? pair->value : pair);
 }
 
 static const struct type_info *map_id_type(const struct iterator *it)
@@ -466,7 +470,7 @@ static struct iterator *map_it_dup(const struct iterator *it)
                 return NULL;
 
         struct map_it *dup = map_it_create(
-                        m_it->map, m_it->bucket_pos, m_it->it.cbs);
+                        m_it->map, m_it->bucket_pos, m_it->it.cbs, m_it->type);
         if (!dup)
                 return NULL;
 
@@ -519,12 +523,12 @@ static struct iterator_callbacks map_rit_cbs = {
 
 /* Public API ------------------------*/
 
-struct iterator *map_begin(const struct map *map)
+struct iterator *map_begin(const struct map *map, enum map_it_type type)
 {
         if (!map)
                 return NULL;
 
-        struct map_it *m_it = map_it_create(map, 0, &map_it_cbs);
+        struct map_it *m_it = map_it_create(map, 0, &map_it_cbs, type);
         if (!m_it)
                 return NULL;
 
@@ -535,13 +539,13 @@ struct iterator *map_begin(const struct map *map)
         return (struct iterator *)m_it;
 }
 
-struct iterator *map_end(const struct map *map)
+struct iterator *map_end(const struct map *map, enum map_it_type type)
 {
         if (!map)
                 return NULL;
 
-        struct map_it *m_it =
-                        map_it_create(map, map->bucket_count - 1, &map_it_cbs);
+        struct map_it *m_it = map_it_create(
+                        map, map->bucket_count - 1, &map_it_cbs, type);
         if (!m_it)
                 return NULL;
 
@@ -552,13 +556,13 @@ struct iterator *map_end(const struct map *map)
         return (struct iterator *)m_it;
 }
 
-struct iterator *map_rbegin(const struct map *map)
+struct iterator *map_rbegin(const struct map *map, enum map_it_type type)
 {
         if (!map)
                 return NULL;
 
-        struct map_it *m_it =
-                        map_it_create(map, map->bucket_count - 1, &map_rit_cbs);
+        struct map_it *m_it = map_it_create(
+                        map, map->bucket_count - 1, &map_rit_cbs, type);
         if (!m_it)
                 return NULL;
 
@@ -569,12 +573,12 @@ struct iterator *map_rbegin(const struct map *map)
         return (struct iterator *)m_it;
 }
 
-struct iterator *map_rend(const struct map *map)
+struct iterator *map_rend(const struct map *map, enum map_it_type type)
 {
         if (!map)
                 return NULL;
 
-        struct map_it *m_it = map_it_create(map, 0, &map_rit_cbs);
+        struct map_it *m_it = map_it_create(map, 0, &map_rit_cbs, type);
         if (!m_it)
                 return NULL;
 
