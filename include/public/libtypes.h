@@ -46,8 +46,8 @@ struct type_string {
 };
 
 enum type_destroy_policy {
-        DESTROY_POLICY_AUTO_FREE,
-        DESTROY_POLICY_NO_FREE
+        TYPE_DESTROY_POLICY_AUTO_FREE,
+        TYPE_DESTROY_POLICY_NO_FREE
 };
 
 /* API -----------------------------------------------------------------------*/
@@ -72,14 +72,14 @@ const struct type_info *type_double();
 const struct type_info *type_long_double();
 
 /**
- * @param policy : If DESTROY_POLICY_AUTO_FREE, the address pointed by the
+ * @param policy : If TYPE_DESTROY_POLICY_AUTO_FREE, the address pointed by the
  * pointer will be automatically free()'s on destruction. Otherwise nothing will
  * be done.
  */
 const struct type_info *type_pointer(enum type_destroy_policy policy);
 
 /**
- * @param policy : If DESTROY_POLICY_AUTO_FREE, the address pointed by the
+ * @param policy : If TYPE_DESTROY_POLICY_AUTO_FREE, the address pointed by the
  * pointer will be automatically free()'s on destruction. Otherwise nothing will
  * be done.
  */

@@ -428,7 +428,7 @@ static void *map_it_data(const struct iterator *it)
                 return NULL;
 
         struct m_pair *pair = &m_it->node->pair;
-        return (m_it->type == MAP_IT_VALUE ? pair->value : pair);
+        return (m_it->type == MAP_IT_TYPE_VALUE ? pair->value : pair);
 }
 
 static const struct type_info *map_id_type(const struct iterator *it)
