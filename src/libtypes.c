@@ -112,6 +112,15 @@ static void copy_pointer(void *dest, const void *src)
         a->pointer = b->pointer;
 }
 
+static void copy_destroy_pointer(void *dest, const void *src)
+{
+        struct type_pointer *a = dest;
+        const struct type_pointer *b = src;
+
+        free(a->pointer);
+        a->pointer = b->pointer;
+}
+
 static int comp_pointer(const void *first, const void *second)
 {
         const struct type_pointer *a = first;
@@ -136,7 +145,7 @@ static struct type_info info_pointer = {
 
 static struct type_info info_auto_pointer = {
         .size = sizeof(struct type_pointer),
-        .copy = copy_pointer,
+        .copy = copy_destroy_pointer,
         .comp = comp_pointer,
         .hash = NULL,
         .destroy = destroy_pointer
@@ -144,7 +153,7 @@ static struct type_info info_auto_pointer = {
 
 const struct type_info *type_pointer(enum type_destroy_policy policy)
 {
-        return (policy == DESTROY_POLICY_AUTO_FREE ?
+        return (policy == TYPE_DESTROY_POLICY_AUTO_FREE ?
                         &info_auto_pointer : &info_pointer);
 }
 
@@ -155,6 +164,15 @@ static void copy_string(void *dest, const void *src)
         struct type_string *a = dest;
         const struct type_string *b = src;
 
+        a->string = b->string;
+}
+
+static void copy_destroy_string(void *dest, const void *src)
+{
+        struct type_string *a = dest;
+        const struct type_string *b = src;
+
+        free(a->string);
         a->string = b->string;
 }
 
@@ -206,7 +224,7 @@ static struct type_info info_string = {
 
 static struct type_info info_auto_string = {
         .size = sizeof(struct type_string),
-        .copy = copy_string,
+        .copy = copy_destroy_pointer,
         .comp = comp_string,
         .hash = hash_string,
         .destroy = destroy_string
@@ -214,6 +232,6 @@ static struct type_info info_auto_string = {
 
 const struct type_info *type_string(enum type_destroy_policy policy)
 {
-        return (policy == DESTROY_POLICY_AUTO_FREE ?
+        return (policy == TYPE_DESTROY_POLICY_AUTO_FREE ?
                         &info_auto_string : &info_string);
 }

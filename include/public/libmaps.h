@@ -24,8 +24,8 @@ struct pair {
 };
 
 enum map_it_type {
-        MAP_IT_VALUE,
-        MAP_IT_PAIR
+        MAP_IT_TYPE_VALUE,
+        MAP_IT_TYPE_PAIR
 };
 
 /* API -----------------------------------------------------------------------*/

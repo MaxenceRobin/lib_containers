@@ -89,7 +89,7 @@ void main()
         int *vector = vector_create(type_int(), 10);
         struct list *list = list_create(type_int());
         struct map *map = map_create(
-                        type_string(DESTROY_POLICY_AUTO_FREE), type_int());
+                        type_string(TYPE_DESTROY_POLICY_AUTO_FREE), type_int());
 
         char key[8];
         for (int i = 0; i < 10; ++i) {
@@ -106,14 +106,14 @@ void main()
 
         ctn_for_each(vector_begin(vector), modulo, INT(10));
         ctn_for_each(list_begin(list), modulo, INT(10));
-        ctn_for_each(map_begin(map, MAP_IT_VALUE), modulo, INT(10));
+        ctn_for_each(map_begin(map, MAP_IT_TYPE_VALUE), modulo, INT(10));
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
         print_map("map", map_begin(map, MAP_IT_PAIR));
 
         ctn_remove_if(vector_begin(vector), is_lower_than, INT(3));
         ctn_remove_if(list_begin(list), is_lower_than, INT(5));
-        ctn_remove_if(map_begin(map, MAP_IT_VALUE), is_lower_than, INT(7));
+        ctn_remove_if(map_begin(map, MAP_IT_TYPE_VALUE), is_lower_than, INT(7));
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
         print_map("map", map_begin(map, MAP_IT_PAIR));
