@@ -39,13 +39,13 @@ struct list_it {
 /* Private utility functions ---------*/
 
 /**
- * @brief Inserts an empty node of 'list' after 'previous' containing 'value'.
+ * @brief Inserts an empty node of 'list' before 'next' containing 'value'.
  *
  * @return Pointer to the created node on success.
  * @return NULL on failure.
  */
 static struct node *insert_node(
-                struct list *list, struct node *previous, const void *value)
+                struct list *list, struct node *next, const void *value)
 {
         struct node *node = calloc(1, sizeof(*node));
         if (!node)
@@ -59,8 +59,8 @@ static struct node *insert_node(
 
         node->head = list;
 
-        node->next = previous->next;
-        node->previous = previous;
+        node->next = next;
+        node->previous = next->previous;
 
         node->next->previous = node;
         node->previous->next = node;
@@ -87,6 +87,19 @@ static void remove_node(const struct node *node)
         node->next->previous = node->previous;
         node->previous->next = node->next;
         destroy_node(node);
+}
+
+static void clear_list(struct list *list)
+{
+        struct node *next = list->node.next;
+        for (struct node *node = next; node != &list->node; node = next) {
+                next = node->next;
+                destroy_node(node);
+        }
+
+        list->len = 0;
+        list->node.next = &list->node;
+        list->node.previous = &list->node;
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -117,54 +130,33 @@ void list_destroy(const struct list *list)
         if (!list)
                 return;
 
-        struct node *copy = list->node.next;
-        for (struct node *node = copy; node != &list->node; node = copy) {
-                copy = node->next;
-                destroy_node(node);
-        }
-
+        clear_list((struct list *)list);
         free((struct list *)list);
 }
 
-int list_push_front(struct list *list, const void *value)
+struct node *list_push_front(struct list *list, const void *value)
 {
         if (!list || !value)
-                return -EINVAL;
+                return NULL;
 
-        struct node *node = insert_node(list, &list->node, value);
-        if (!node)
-                return -ENOMEM;
-
-        return 0;
+        return insert_node(list, list->node.next, value);
 }
 
-int list_push_back(struct list *list, const void *value)
+struct node *list_push_back(struct list *list, const void *value)
 {
         if (!list || !value)
-                return -EINVAL;
+                return NULL;
 
-        struct node *node = insert_node(list, list->node.previous, value);
-        if (!node)
-                return -ENOMEM;
-
-        return 0;
+        return insert_node(list, &list->node, value);
 }
 
-int list_insert(struct list *list, struct iterator *it, const void *value)
+struct node *list_insert(
+                struct list *list, struct node *node, const void *value)
 {
-        if (!list || !it || !value)
-                return -EINVAL;
+        if (!list || !node || !value || node->head != list)
+                return NULL;
 
-        struct list_it *l_it = (struct list_it *)it;
-        if (l_it->list != list)
-                return -EINVAL;
-
-        struct node *node = insert_node(list, l_it->node->previous, value);
-        if (!node)
-                return -ENOMEM;
-
-        l_it->node = node;
-        return 0;
+        return insert_node(list, node, value);
 }
 
 int list_pop_front(struct list *list)
@@ -185,12 +177,87 @@ int list_pop_back(struct list *list)
         return 0;
 }
 
+int list_remove(struct list *list, const struct node *node)
+{
+        if (!list || !node)
+                return -EINVAL;
+
+        remove_node(node);
+        return 0;
+}
+
+int list_clear(struct list *list)
+{
+        if (!list)
+                return -EINVAL;
+
+        clear_list(list);
+        return 0;
+}
+
 ssize_t list_len(const struct list *list)
 {
         if (!list)
                 return -EINVAL;
 
         return (ssize_t)list->len;
+}
+
+struct node *list_first(const struct list *list)
+{
+        if (!list)
+                return NULL;
+
+        return list->node.next;
+}
+
+struct node *list_last(const struct list *list)
+{
+        if (!list)
+                return NULL;
+
+        return list->node.previous;
+}
+
+struct node *list_node(const struct list *list, unsigned int pos)
+{
+        if (!list || pos >= list->len)
+                return NULL;
+
+        struct node *node = list->node.next;
+        for (unsigned int i = 0; i < pos; ++i)
+                node = node->next;
+
+        return node;
+}
+
+struct node *node_next(const struct node *node)
+{
+        if (!node)
+                return NULL;
+
+        return node->next;
+}
+
+struct node *node_previous(const struct node *node)
+{
+        if (!node)
+                return NULL;
+
+        return node->previous;
+}
+
+bool node_is_valid(const struct node *node)
+{
+        return (node && node != &node->head->node);
+}
+
+void *node_data(struct node *node)
+{
+        if (!node || node == &node->head->node)
+                return NULL;
+
+        return node->data;
 }
 
 /* Iterator API --------------------------------------------------------------*/

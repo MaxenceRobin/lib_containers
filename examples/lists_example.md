@@ -17,25 +17,24 @@ Code :
 
 static void print_list(const struct list *list)
 {
-        bool first = true;
-        struct iterator *it = list_begin(list);
-
         printf("\nlen = %ld\n", list_len(list));
         printf("{");
 
-        while (it_is_valid(it)) {
+        bool first = true;
+
+        struct node *node = list_first(list);
+        while (node_is_valid(node)) {
                 if (!first)
                         printf(" -> ");
 
-                const int *value = it_data(it);
+                const int *value = node_data(node);
                 printf("%d", *value);
 
-                it_next(it);
                 first = false;
+                node = node_next(node);
         }
 
         printf("}\n");
-        it_unref(it);
 }
 
 /* Main ----------------------------------------------------------------------*/
@@ -49,19 +48,27 @@ void main()
                 list_push_front(list, INT(i + 10));
                 list_push_back(list, INT(i + 100));
         }
+
         print_list(list);
 
-        struct iterator *it = list_begin(list);
+        struct node *node = list_node(list, 5);
         for (int i = 0; i < 5; ++i)
-                it_next(it);
+                list_insert(list, node, INT(i + 1000));
 
-        for (int i = 0; i < 5; ++i)
-                list_insert(list, it, INT(i + 1000));
         print_list(list);
 
-        it_previous(it);
         for (int i = 0; i < 3; ++i)
-                it_remove(it);
+                list_remove(list, list_first(list));
+
+        print_list(list);
+
+        for (int i = 0; i < 2; ++i) {
+                list_pop_front(list);
+                list_pop_back(list);
+        }
+        print_list(list);
+
+        list_clear(list);
         print_list(list);
 
         list_destroy(list);
@@ -77,8 +84,14 @@ len = 10
 {14 -> 13 -> 12 -> 11 -> 10 -> 100 -> 101 -> 102 -> 103 -> 104}
 
 len = 15
-{14 -> 13 -> 12 -> 11 -> 10 -> 1004 -> 1003 -> 1002 -> 1001 -> 1000 -> 100 -> 101 -> 102 -> 103 -> 104}
+{14 -> 13 -> 12 -> 11 -> 10 -> 1000 -> 1001 -> 1002 -> 1003 -> 1004 -> 100 -> 101 -> 102 -> 103 -> 104}
 
 len = 12
-{14 -> 13 -> 12 -> 11 -> 1002 -> 1001 -> 1000 -> 100 -> 101 -> 102 -> 103 -> 104}
+{11 -> 10 -> 1000 -> 1001 -> 1002 -> 1003 -> 1004 -> 100 -> 101 -> 102 -> 103 -> 104}
+
+len = 8
+{1000 -> 1001 -> 1002 -> 1003 -> 1004 -> 100 -> 101 -> 102}
+
+len = 0
+{}
 ```
