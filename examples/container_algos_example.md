@@ -102,25 +102,25 @@ void main()
 
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
-        print_map("map", map_begin(map, MAP_IT_PAIR));
+        print_map("map", map_begin(map, MAP_IT_TYPE_PAIR));
 
         ctn_for_each(vector_begin(vector), modulo, INT(10));
         ctn_for_each(list_begin(list), modulo, INT(10));
         ctn_for_each(map_begin(map, MAP_IT_TYPE_VALUE), modulo, INT(10));
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
-        print_map("map", map_begin(map, MAP_IT_PAIR));
+        print_map("map", map_begin(map, MAP_IT_TYPE_PAIR));
 
         ctn_remove_if(vector_begin(vector), is_lower_than, INT(3));
         ctn_remove_if(list_begin(list), is_lower_than, INT(5));
         ctn_remove_if(map_begin(map, MAP_IT_TYPE_VALUE), is_lower_than, INT(7));
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
-        print_map("map", map_begin(map, MAP_IT_PAIR));
+        print_map("map", map_begin(map, MAP_IT_TYPE_PAIR));
 
         print_container("vector reverse", vector_rbegin(vector));
         print_container("list reverse", list_rbegin(list));
-        print_map("map reverse", map_rbegin(map, MAP_IT_PAIR));
+        print_map("map reverse", map_rbegin(map, MAP_IT_TYPE_PAIR));
 
         vector_destroy(vector);
         list_destroy(list);
