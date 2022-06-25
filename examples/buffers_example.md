@@ -1,11 +1,11 @@
-# Libbuffers example
+# Lib_buffers example
 
 Code :
 ```C
 /* Includes ------------------------------------------------------------------*/
 
-#include "libbuffers.h"
-#include "libtypes.h"
+#include "lib_buffers.h"
+#include "lib_types.h"
 
 #include <stdio.h>
 

@@ -1,11 +1,11 @@
-# Liblists example
+# Lib_lists example
 
 Code :
 ```C
 /* Includes ------------------------------------------------------------------*/
 
-#include "liblists.h"
-#include "libtypes.h"
+#include "lib_lists.h"
+#include "lib_types.h"
 
 #include <stdio.h>
 

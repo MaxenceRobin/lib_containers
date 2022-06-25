@@ -8,7 +8,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libtypes.h"
+#include "lib_types.h"
 
 #include <stdbool.h>
 #include <stddef.h>

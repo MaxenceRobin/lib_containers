@@ -1,14 +1,14 @@
-# Libcontainers_algos example
+# Lib_containers_algos example
 
 Code :
 ```C
 /* Includes ------------------------------------------------------------------*/
 
-#include "libcontainer_algos.h"
-#include "liblists.h"
-#include "libmaps.h"
-#include "libtypes.h"
-#include "libvectors.h"
+#include "lib_container_algos.h"
+#include "lib_lists.h"
+#include "lib_maps.h"
+#include "lib_types.h"
+#include "lib_vectors.h"
 
 #include <stdio.h>
 #include <stdlib.h>

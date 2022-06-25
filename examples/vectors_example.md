@@ -1,11 +1,11 @@
-# Libvectors example
+# Lib_vectors example
 
 Code :
 ```C
 /* Includes ------------------------------------------------------------------*/
 
-#include "libvectors.h"
-#include "libtypes.h"
+#include "lib_vectors.h"
+#include "lib_types.h"
 
 #include <stdio.h>
 
