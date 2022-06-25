@@ -5,8 +5,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libiterators_private.h"
-#include "libvectors.h"
+#include "lib_iterators_private.h"
+#include "lib_vectors.h"
 
 #include <errno.h>
 #include <stdlib.h>

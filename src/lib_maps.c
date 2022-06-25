@@ -5,8 +5,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libiterators_private.h"
-#include "libmaps.h"
+#include "lib_iterators_private.h"
+#include "lib_maps.h"
 
 #include <errno.h>
 #include <stddef.h>

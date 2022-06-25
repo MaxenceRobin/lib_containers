@@ -1,12 +1,12 @@
-# Libmaps example
+# Lib_maps example
 
 Code :
 ```C
 /* Includes ------------------------------------------------------------------*/
 
-#include "libiterators.h"
-#include "libmaps.h"
-#include "libtypes.h"
+#include "lib_iterators.h"
+#include "lib_maps.h"
+#include "lib_types.h"
 
 #include <stdio.h>
 

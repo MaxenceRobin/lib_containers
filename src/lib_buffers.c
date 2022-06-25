@@ -5,7 +5,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libbuffers.h"
+#include "lib_buffers.h"
 
 #include <errno.h>
 #include <stdlib.h>

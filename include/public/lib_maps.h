@@ -8,8 +8,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libiterators.h"
-#include "libtypes.h"
+#include "lib_iterators.h"
+#include "lib_types.h"
 
 #include <stdbool.h>
 #include <sys/types.h>

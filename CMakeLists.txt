@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.16.3)
-project(libcontainers)
+project(lib_containers)
 
 # Variables --------------------------------------------------------------------
 
 set(TARGET_NAME containers)
 
 set(SOURCES
-        src/libbuffers.c
-        src/liblists.c
-        src/libtypes.c
-        src/libvectors.c
-        src/libmaps.c
-        src/libiterators.c
-        src/libcontainer_algos.c
+        src/lib_buffers.c
+        src/lib_lists.c
+        src/lib_types.c
+        src/lib_vectors.c
+        src/lib_maps.c
+        src/lib_iterators.c
+        src/lib_container_algos.c
 )
 
 set(PUBLIC_HEADERS

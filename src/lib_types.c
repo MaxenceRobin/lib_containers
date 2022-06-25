@@ -5,7 +5,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "libtypes.h"
+#include "lib_types.h"
 
 #include <stdlib.h>
 #include <string.h>

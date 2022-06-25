@@ -1,6 +1,6 @@
-# Libcontainers
+# Lib_containers
 
-Libcontainers is a simple containers manipulation library. It provides basic
+Lib_containers is a simple containers manipulation library. It provides basic
 data structures :
 
 - Dynamic arrays
