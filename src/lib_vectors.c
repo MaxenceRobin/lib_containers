@@ -284,6 +284,16 @@ int vector_sort(void *vector)
         return 0;
 }
 
+int vector_sort_by(void *vector, type_comp_cb comp)
+{
+        const struct meta *meta = vector_to_meta(vector);
+        if (!meta || !comp)
+                return -EINVAL;
+
+        qsort(vector, meta->len, meta->type->size, comp);
+        return 0;
+}
+
 int vector_clear(void *vector)
 {
         struct meta *meta = vector_to_meta(vector);
