@@ -143,6 +143,8 @@ static bool contains_if(struct iterator *it, ctn_match_cb match, void *arg)
 
 static struct iterator *min_max(struct iterator *it, enum comp_type comp_type)
 {
+        struct iterator *found = NULL;
+
         struct iterator *dup = it_dup(it);
         if (!dup)
                 return NULL;
@@ -150,7 +152,7 @@ static struct iterator *min_max(struct iterator *it, enum comp_type comp_type)
         if (!it_is_valid(dup))
                 goto error_it_invalid;
 
-        struct iterator *found = it_dup(it);
+        found = it_dup(it);
         if (!found)
                 goto error_it_invalid;
 
