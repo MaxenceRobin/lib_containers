@@ -113,6 +113,23 @@ static int remove_if(struct iterator *it, ctn_match_cb match, void *arg)
         return 0;
 }
 
+static int keep_if(struct iterator *it, ctn_match_cb match, void *arg)
+{
+        struct iterator *dup = it_dup(it);
+        if (!dup)
+                return -ENOMEM;
+
+        while (it_is_valid(dup)) {
+                if (!match(it_data(dup), arg))
+                        it_remove(dup);
+                else
+                        it_next(dup);
+        }
+
+        it_unref(dup);
+        return 0;
+}
+
 static bool contains_if(struct iterator *it, ctn_match_cb match, void *arg)
 {
         struct iterator *found = find_if(it, match, arg);
@@ -243,6 +260,33 @@ int ctn_remove_if(struct iterator *it, ctn_match_cb match, void *arg)
                 goto out;
 
         res = remove_if(it, match, arg);
+out:
+        it_unref(it);
+        return res;
+}
+
+int ctn_keep(struct iterator *it, const void *value)
+{
+        int res = -EINVAL;
+        if (!it || !value)
+                goto out;
+
+        res = keep_if(it, match_equal, &(struct match_equal_ctx) {
+                .type = it_type(it),
+                .value = value
+        });
+out:
+        it_unref(it);
+        return res;
+}
+
+int ctn_keep_if(struct iterator *it, ctn_match_cb match, void *arg)
+{
+        int res = -EINVAL;
+        if (!it || !match)
+                goto out;
+
+        res = keep_if(it, match, arg);
 out:
         it_unref(it);
         return res;
