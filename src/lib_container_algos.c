@@ -172,6 +172,19 @@ error_it_invalid:
         return found;
 }
 
+static int copy_min_max(
+                struct iterator *it, void *value, enum comp_type comp_type)
+{
+        struct iterator *found = min_max(it, comp_type);
+        if (!found)
+                return -ENOENT;
+
+        it_type(it)->copy(value, it_data(found));
+        it_unref(found);
+
+        return 0;
+}
+
 /* API -----------------------------------------------------------------------*/
 
 int ctn_for_each(struct iterator *it, ctn_action_cb action, void *arg)
@@ -355,6 +368,30 @@ struct iterator *ctn_max(struct iterator *it)
                 goto out;
 
         res = min_max(it, COMP_TYPE_MAX);
+out:
+        it_unref(it);
+        return res;
+}
+
+int ctn_copy_min(struct iterator *it, void *value)
+{
+        int res = -EINVAL;
+        if (!it)
+                goto out;
+
+        res = copy_min_max(it, value, COMP_TYPE_MIN);
+out:
+        it_unref(it);
+        return res;
+}
+
+int ctn_copy_max(struct iterator *it, void *value)
+{
+        int res = -EINVAL;
+        if (!it)
+                goto out;
+
+        res = copy_min_max(it, value, COMP_TYPE_MAX);
 out:
         it_unref(it);
         return res;

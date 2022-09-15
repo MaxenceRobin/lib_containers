@@ -193,4 +193,28 @@ struct iterator *ctn_min(struct iterator *it);
  */
 struct iterator *ctn_max(struct iterator *it);
 
+/**
+ * @brief Copies the lowest element into 'value' starting from 'it'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' or 'value' are invalid.
+ * @return -ENOENT on failure.
+ *
+ * @note it_unref() is called on 'it' at the end for convenience.
+ * Use it_ref() when sending an iterator you want to keep.
+ */
+int ctn_copy_min(struct iterator *it, void *value);
+
+/**
+ * @brief Copies the greatest element into 'value' starting from 'it'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' or 'value' are invalid.
+ * @return -ENOENT on failure.
+ *
+ * @note it_unref() is called on 'it' at the end for convenience.
+ * Use it_ref() when sending an iterator you want to keep.
+ */
+int ctn_copy_max(struct iterator *it, void *value);
+
 #endif /* LIB_CONTAINER_ALGOS_H */
