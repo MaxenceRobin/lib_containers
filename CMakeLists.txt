@@ -6,6 +6,7 @@ project(lib_containers)
 set(TARGET_NAME containers)
 
 set(SOURCES
+        src/lib_arrays.c
         src/lib_buffers.c
         src/lib_lists.c
         src/lib_types.c
