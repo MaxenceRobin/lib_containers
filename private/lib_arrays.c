@@ -112,7 +112,7 @@ static struct iterator_callbacks array_rit_cbs;
 /* Utility functions -----------------*/
 
 static struct array_it *array_it_create(
-                struct array *array,
+                const struct array *array,
                 int pos,
                 const struct iterator_callbacks *cbs)
 {
@@ -121,7 +121,7 @@ static struct array_it *array_it_create(
                 return NULL;
 
         it_init(&a_it->it, cbs);
-        a_it->array = array;
+        a_it->array = (struct array *)array;
         a_it->pos = pos;
 
         return a_it;
