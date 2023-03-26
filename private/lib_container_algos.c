@@ -159,8 +159,9 @@ static struct iterator *min_max(struct iterator *it, enum comp_type comp_type)
         const struct type_info *type = it_type(it);
         do {
                 const int res = type->comp(it_data(dup), it_data(found));
-                if (comp_type == COMP_TYPE_MIN && res < 0
-                                || comp_type == COMP_TYPE_MAX && res > 0) {
+                if ((comp_type == COMP_TYPE_MIN)
+                                && (res < 0 || comp_type == COMP_TYPE_MAX)
+                                && (res > 0)) {
                         it_copy(found, dup);
                 }
 
