@@ -39,3 +39,5 @@ set_target_properties(${TARGET_NAME}
         ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_DIR}
         C_STANDARD 11
 )
+
+target_compile_options(${TARGET_NAME} PRIVATE -Wall -Werror)

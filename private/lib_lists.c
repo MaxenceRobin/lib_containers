@@ -323,7 +323,7 @@ static const struct type_info *list_it_type(const struct iterator *it)
 
 static int list_it_remove(struct iterator *it)
 {
-        if (!list_it_is_valid)
+        if (!list_it_is_valid(it))
                 return -EINVAL;
 
         struct list_it *l_it = (struct list_it *)it;
@@ -337,7 +337,7 @@ static int list_it_remove(struct iterator *it)
 
 static int list_rit_remove(struct iterator *it)
 {
-        if (!list_it_is_valid)
+        if (!list_it_is_valid(it))
                 return -EINVAL;
 
         struct list_it *l_it = (struct list_it *)it;

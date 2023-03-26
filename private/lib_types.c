@@ -202,7 +202,7 @@ static unsigned long hash_string(const void *data)
         if (!string)
                 return (unsigned long)-1;
 
-        while (c = *string++)
+        while ((c = *string++))
                 hash = (hash << 5) + hash + c;
 
         return hash;
@@ -224,7 +224,7 @@ static struct type_info info_string = {
 
 static struct type_info info_auto_string = {
         .size = sizeof(struct type_string),
-        .copy = copy_destroy_pointer,
+        .copy = copy_destroy_string,
         .comp = comp_string,
         .hash = hash_string,
         .destroy = destroy_string

@@ -78,6 +78,7 @@ int array_sort_by(struct array *array, type_comp_cb comp)
                 return -EINVAL;
 
         qsort(array->data, array->len, array->type->size, comp);
+        return 0;
 }
 
 ssize_t array_len(const struct array *array)
