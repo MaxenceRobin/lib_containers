@@ -54,10 +54,11 @@ static void destroy_values(const struct buffer *buffer)
         if (buffer->status == BUFFER_EMPTY)
                 return;
 
-        for (unsigned int i = buffer->read;
-                        i != buffer->write;
-                        i = (i + 1) % buffer->count)
+        unsigned int i = buffer->read;
+        do {
                 buffer->type->destroy(data_offset(buffer, i));
+                i = (i + 1) % buffer->count;
+        } while (i != buffer->write);
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -148,10 +149,7 @@ int buffer_clear(struct buffer *buffer)
 
 const void *buffer_data(const struct buffer *buffer)
 {
-        if (!buffer)
-                return NULL;
-
-        if (buffer->status == BUFFER_EMPTY)
+        if (!buffer || buffer->status == BUFFER_EMPTY)
                 return NULL;
 
         return data_offset(buffer, buffer->read);

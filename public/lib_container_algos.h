@@ -53,7 +53,7 @@ int ctn_count(struct iterator *it, const void *value);
  * @return -ENOMEM on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 int ctn_count_if(struct iterator *it, ctn_match_cb match, void *arg);
 
@@ -66,7 +66,7 @@ int ctn_count_if(struct iterator *it, ctn_match_cb match, void *arg);
  * @return NULL if 'it' or 'value' are invalid, or on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 struct iterator *ctn_find(struct iterator *it, const void *value);
 
@@ -79,7 +79,7 @@ struct iterator *ctn_find(struct iterator *it, const void *value);
  * @return NULL if 'it' or 'match' are invalid, or on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 struct iterator *ctn_find_if(
                 struct iterator *it, ctn_match_cb match, void *arg);
@@ -92,7 +92,7 @@ struct iterator *ctn_find_if(
  * @return -ENOMEM on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 int ctn_remove(struct iterator *it, const void *value);
 
@@ -105,9 +105,34 @@ int ctn_remove(struct iterator *it, const void *value);
  * @return -ENOMEM on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 int ctn_remove_if(struct iterator *it, ctn_match_cb match, void *arg);
+
+/**
+ * @brief Keeps all elements equal to 'value' starting from 'it'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' or 'value' are invalid.
+ * @return -ENOMEM on failure.
+ *
+ * @note it_unref() is called on 'it' at the end for convenience.
+ * Use it_ref() when sending an iterator you want to keep.
+ */
+int ctn_keep(struct iterator *it, const void *value);
+
+/**
+ * @brief Keeps all elements matching 'match' starting from 'it' with 'arg'
+ * passed as a second parameter.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' or 'match' are invalid.
+ * @return -ENOMEM on failure.
+ *
+ * @note it_unref() is called on 'it' at the end for convenience.
+ * Use it_ref() when sending an iterator you want to keep.
+ */
+int ctn_keep_if(struct iterator *it, ctn_match_cb match, void *arg);
 
 /**
  * @brief Indicates if any element is equal to 'value' starting from 'it'.
@@ -117,7 +142,7 @@ int ctn_remove_if(struct iterator *it, ctn_match_cb match, void *arg);
  * @return false if 'it' or 'value' are invalid, or on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 bool ctn_contains(struct iterator *it, const void *value);
 
@@ -130,7 +155,7 @@ bool ctn_contains(struct iterator *it, const void *value);
  * @return false if 'it' or 'match' are invalid, or on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 bool ctn_contains_if(struct iterator *it, ctn_match_cb match, void *arg);
 
@@ -142,7 +167,7 @@ bool ctn_contains_if(struct iterator *it, ctn_match_cb match, void *arg);
  * @return -ENOMEM on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 int ctn_fill(struct iterator *it, const void *value);
 
@@ -153,7 +178,7 @@ int ctn_fill(struct iterator *it, const void *value);
  * @return NULL if 'it' is invalid or on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 struct iterator *ctn_min(struct iterator *it);
 
@@ -164,8 +189,32 @@ struct iterator *ctn_min(struct iterator *it);
  * @return NULL if 'it' is invalid or on failure.
  *
  * @note it_unref() is called on 'it' at the end for convenience.
- * Use it_ref() when sending an iterator you want to keep
+ * Use it_ref() when sending an iterator you want to keep.
  */
 struct iterator *ctn_max(struct iterator *it);
+
+/**
+ * @brief Copies the lowest element into 'value' starting from 'it'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' or 'value' are invalid.
+ * @return -ENOENT on failure.
+ *
+ * @note it_unref() is called on 'it' at the end for convenience.
+ * Use it_ref() when sending an iterator you want to keep.
+ */
+int ctn_copy_min(struct iterator *it, void *value);
+
+/**
+ * @brief Copies the greatest element into 'value' starting from 'it'.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'it' or 'value' are invalid.
+ * @return -ENOENT on failure.
+ *
+ * @note it_unref() is called on 'it' at the end for convenience.
+ * Use it_ref() when sending an iterator you want to keep.
+ */
+int ctn_copy_max(struct iterator *it, void *value);
 
 #endif /* LIB_CONTAINER_ALGOS_H */

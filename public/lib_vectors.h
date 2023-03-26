@@ -85,6 +85,14 @@ int vector_remove(void *vector, unsigned int pos);
 int vector_sort(void *vector);
 
 /**
+ * @brief Sorts 'vector' in ascending order following 'comp' rule.
+ *
+ * @return 0 on success.
+ * @return -EINVAL if 'vector' or 'comp' are invalid.
+ */
+int vector_sort_by(void *vector, type_comp_cb comp);
+
+/**
  * @brief Removes all elements from 'vector".
  *
  * @return 0 on success.

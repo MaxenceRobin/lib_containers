@@ -6,21 +6,22 @@ project(lib_containers)
 set(TARGET_NAME containers)
 
 set(SOURCES
-        src/lib_buffers.c
-        src/lib_lists.c
-        src/lib_types.c
-        src/lib_vectors.c
-        src/lib_maps.c
-        src/lib_iterators.c
-        src/lib_container_algos.c
+        private/lib_arrays.c
+        private/lib_buffers.c
+        private/lib_lists.c
+        private/lib_types.c
+        private/lib_vectors.c
+        private/lib_maps.c
+        private/lib_iterators.c
+        private/lib_container_algos.c
 )
 
 set(PUBLIC_HEADERS
-        include/public
+        public
 )
 
 set(PRIVATE_HEADERS
-        include/private)
+        private)
 
 set(INSTALL_DIR
         bin

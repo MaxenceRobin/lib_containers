@@ -113,6 +113,23 @@ static int remove_if(struct iterator *it, ctn_match_cb match, void *arg)
         return 0;
 }
 
+static int keep_if(struct iterator *it, ctn_match_cb match, void *arg)
+{
+        struct iterator *dup = it_dup(it);
+        if (!dup)
+                return -ENOMEM;
+
+        while (it_is_valid(dup)) {
+                if (!match(it_data(dup), arg))
+                        it_remove(dup);
+                else
+                        it_next(dup);
+        }
+
+        it_unref(dup);
+        return 0;
+}
+
 static bool contains_if(struct iterator *it, ctn_match_cb match, void *arg)
 {
         struct iterator *found = find_if(it, match, arg);
@@ -126,6 +143,8 @@ static bool contains_if(struct iterator *it, ctn_match_cb match, void *arg)
 
 static struct iterator *min_max(struct iterator *it, enum comp_type comp_type)
 {
+        struct iterator *found = NULL;
+
         struct iterator *dup = it_dup(it);
         if (!dup)
                 return NULL;
@@ -133,7 +152,7 @@ static struct iterator *min_max(struct iterator *it, enum comp_type comp_type)
         if (!it_is_valid(dup))
                 goto error_it_invalid;
 
-        struct iterator *found = it_dup(it);
+        found = it_dup(it);
         if (!found)
                 goto error_it_invalid;
 
@@ -151,6 +170,19 @@ static struct iterator *min_max(struct iterator *it, enum comp_type comp_type)
 error_it_invalid:
         it_unref(dup);
         return found;
+}
+
+static int copy_min_max(
+                struct iterator *it, void *value, enum comp_type comp_type)
+{
+        struct iterator *found = min_max(it, comp_type);
+        if (!found)
+                return -ENOENT;
+
+        it_type(it)->copy(value, it_data(found));
+        it_unref(found);
+
+        return 0;
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -248,6 +280,33 @@ out:
         return res;
 }
 
+int ctn_keep(struct iterator *it, const void *value)
+{
+        int res = -EINVAL;
+        if (!it || !value)
+                goto out;
+
+        res = keep_if(it, match_equal, &(struct match_equal_ctx) {
+                .type = it_type(it),
+                .value = value
+        });
+out:
+        it_unref(it);
+        return res;
+}
+
+int ctn_keep_if(struct iterator *it, ctn_match_cb match, void *arg)
+{
+        int res = -EINVAL;
+        if (!it || !match)
+                goto out;
+
+        res = keep_if(it, match, arg);
+out:
+        it_unref(it);
+        return res;
+}
+
 bool ctn_contains(struct iterator *it, const void *value)
 {
         bool res = false;
@@ -309,6 +368,30 @@ struct iterator *ctn_max(struct iterator *it)
                 goto out;
 
         res = min_max(it, COMP_TYPE_MAX);
+out:
+        it_unref(it);
+        return res;
+}
+
+int ctn_copy_min(struct iterator *it, void *value)
+{
+        int res = -EINVAL;
+        if (!it)
+                goto out;
+
+        res = copy_min_max(it, value, COMP_TYPE_MIN);
+out:
+        it_unref(it);
+        return res;
+}
+
+int ctn_copy_max(struct iterator *it, void *value)
+{
+        int res = -EINVAL;
+        if (!it)
+                goto out;
+
+        res = copy_min_max(it, value, COMP_TYPE_MAX);
 out:
         it_unref(it);
         return res;

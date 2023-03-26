@@ -27,7 +27,7 @@ static void print_pair(const struct pair *pair)
 
 static void print_map(const struct map *map)
 {
-        struct iterator *it = map_begin(map, MAP_IT_PAIR);
+        struct iterator *it = map_begin(map, MAP_IT_TYPE_PAIR);
         printf("\nmap = {\n");
 
         while (it_is_valid(it)) {
@@ -45,7 +45,7 @@ static void print_map(const struct map *map)
 void main()
 {
         struct map *map = map_create(
-                        type_string(DESTROY_POLICY_NO_FREE), type_int());
+                        type_string(TYPE_DESTROY_POLICY_NO_FREE), type_int());
 
         map_add(map, STR("CPU"), INT(300));
         map_add(map, STR("GPU"), INT(1100));
