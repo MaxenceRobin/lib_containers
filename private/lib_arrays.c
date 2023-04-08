@@ -167,10 +167,10 @@ static const struct type_info *array_it_type(const struct iterator *it)
 
 static struct iterator *array_it_dup(const struct iterator *it)
 {
-        const struct array_it *a_it = (const struct array_it *)it;
         if (!array_it_is_valid(it))
                 return NULL;
 
+        const struct array_it *a_it = (const struct array_it *)it;
         struct array_it *dup =
                         array_it_create(a_it->array, a_it->pos, a_it->it.cbs);
         return (struct iterator *)dup;
@@ -178,6 +178,9 @@ static struct iterator *array_it_dup(const struct iterator *it)
 
 static int array_it_copy(struct iterator *dest, const struct iterator *src)
 {
+        if (!array_it_is_valid(dest) || !array_it_is_valid(src))
+                return -EINVAL;
+
         struct array_it *a_dest = (struct array_it *)dest;
         const struct array_it *a_src = (const struct array_it *)src;
 

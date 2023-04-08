@@ -464,10 +464,10 @@ static int vector_rit_remove(struct iterator *it)
 
 static struct iterator *vector_it_dup(const struct iterator *it)
 {
-        const struct vector_it *v_it = (const struct vector_it *)it;
         if (!vector_it_is_valid(it))
                 return NULL;
 
+        const struct vector_it *v_it = (const struct vector_it *)it;
         struct vector_it *dup =
                         vector_it_create(v_it->meta, v_it->pos, v_it->it.cbs);
         return (struct iterator *)dup;
@@ -475,6 +475,9 @@ static struct iterator *vector_it_dup(const struct iterator *it)
 
 static int vector_it_copy(struct iterator *dest, const struct iterator *src)
 {
+        if (!vector_it_is_valid(dest) || !vector_it_is_valid(src))
+                return -EINVAL;
+
         struct vector_it *v_dest = (struct vector_it *)dest;
         const struct vector_it *v_src = (const struct vector_it *)src;
 
