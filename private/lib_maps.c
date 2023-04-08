@@ -423,10 +423,10 @@ static bool map_it_is_valid(const struct iterator *it)
 
 static void *map_it_data(const struct iterator *it)
 {
-        const struct map_it *m_it = (const struct map_it *)it;
-        if (!m_it->node)
+        if (!map_it_is_valid(it))
                 return NULL;
 
+        const struct map_it *m_it = (const struct map_it *)it;
         struct m_pair *pair = &m_it->node->pair;
         return (m_it->type == MAP_IT_TYPE_VALUE ? pair->value : pair);
 }
@@ -439,10 +439,10 @@ static const struct type_info *map_id_type(const struct iterator *it)
 
 static int map_it_remove(struct iterator *it)
 {
-        struct map_it *m_it = (struct map_it *)it;
-        if (!m_it->node)
+        if (!map_it_is_valid(it))
                 return -EINVAL;
 
+        struct map_it *m_it = (struct map_it *)it;
         struct node *node = m_it->node;
         map_it_seek_next(m_it);
         remove_node_from_map(m_it->map, node);
@@ -452,10 +452,10 @@ static int map_it_remove(struct iterator *it)
 
 static int map_rit_remove(struct iterator *it)
 {
-        struct map_it *m_it = (struct map_it *)it;
-        if (!m_it->node)
+        if (!map_it_is_valid(it))
                 return -EINVAL;
 
+        struct map_it *m_it = (struct map_it *)it;
         struct node *node = m_it->node;
         map_it_seek_previous(m_it);
         remove_node_from_map(m_it->map, node);
@@ -465,10 +465,10 @@ static int map_rit_remove(struct iterator *it)
 
 static struct iterator *map_it_dup(const struct iterator *it)
 {
-        const struct map_it *m_it = (const struct map_it *)it;
-        if (!m_it->node)
+        if (!map_it_is_valid(it))
                 return NULL;
 
+        const struct map_it *m_it = (const struct map_it *)it;
         struct map_it *dup = map_it_create(
                         m_it->map, m_it->bucket_pos, m_it->it.cbs, m_it->type);
         if (!dup)
@@ -480,6 +480,9 @@ static struct iterator *map_it_dup(const struct iterator *it)
 
 static int map_it_copy(struct iterator *dest, const struct iterator *src)
 {
+        if (!map_it_is_valid(dest) || !map_it_is_valid(src))
+                return -EINVAL;
+
         struct map_it *m_dest = (struct map_it *)dest;
         const struct map_it *m_src = (const struct map_it *)src;
 

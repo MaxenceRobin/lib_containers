@@ -25,7 +25,7 @@ struct node {
 struct list {
         const struct type_info *type;
         size_t len;
-        struct node node; /* Useful for functions simplifications */
+        struct node base_node; /* Useful for functions simplifications */
 };
 
 struct list_it {
@@ -80,7 +80,7 @@ static void destroy_node(const struct node *node)
 
 static void remove_node(const struct node *node)
 {
-        if (&node->head->node == node)
+        if (&node->head->base_node == node)
                 return;
 
         --node->head->len;
@@ -91,15 +91,15 @@ static void remove_node(const struct node *node)
 
 static void clear_list(struct list *list)
 {
-        struct node *next = list->node.next;
-        for (struct node *node = next; node != &list->node; node = next) {
+        struct node *next = list->base_node.next;
+        for (struct node *node = next; node != &list->base_node; node = next) {
                 next = node->next;
                 destroy_node(node);
         }
 
         list->len = 0;
-        list->node.next = &list->node;
-        list->node.previous = &list->node;
+        list->base_node.next = &list->base_node;
+        list->base_node.previous = &list->base_node;
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -118,9 +118,9 @@ struct list *list_create(const struct type_info *type)
 
         list->type = type;
         list->len = 0;
-        list->node.head = list;
-        list->node.next = &list->node;
-        list->node.previous = &list->node;
+        list->base_node.head = list;
+        list->base_node.next = &list->base_node;
+        list->base_node.previous = &list->base_node;
 
         return list;
 }
@@ -139,7 +139,7 @@ struct node *list_push_front(struct list *list, const void *value)
         if (!list || !value)
                 return NULL;
 
-        return insert_node(list, list->node.next, value);
+        return insert_node(list, list->base_node.next, value);
 }
 
 struct node *list_push_back(struct list *list, const void *value)
@@ -147,7 +147,7 @@ struct node *list_push_back(struct list *list, const void *value)
         if (!list || !value)
                 return NULL;
 
-        return insert_node(list, &list->node, value);
+        return insert_node(list, &list->base_node, value);
 }
 
 struct node *list_insert(
@@ -164,7 +164,7 @@ int list_pop_front(struct list *list)
         if (!list)
                 return -EINVAL;
 
-        remove_node(list->node.next);
+        remove_node(list->base_node.next);
         return 0;
 }
 
@@ -173,7 +173,7 @@ int list_pop_back(struct list *list)
         if (!list)
                 return -EINVAL;
 
-        remove_node(list->node.previous);
+        remove_node(list->base_node.previous);
         return 0;
 }
 
@@ -208,7 +208,7 @@ struct node *list_first(const struct list *list)
         if (!list)
                 return NULL;
 
-        return list->node.next;
+        return list->base_node.next;
 }
 
 struct node *list_last(const struct list *list)
@@ -216,7 +216,7 @@ struct node *list_last(const struct list *list)
         if (!list)
                 return NULL;
 
-        return list->node.previous;
+        return list->base_node.previous;
 }
 
 struct node *list_node(const struct list *list, unsigned int pos)
@@ -224,7 +224,7 @@ struct node *list_node(const struct list *list, unsigned int pos)
         if (!list || pos >= list->len)
                 return NULL;
 
-        struct node *node = list->node.next;
+        struct node *node = list->base_node.next;
         for (unsigned int i = 0; i < pos; ++i)
                 node = node->next;
 
@@ -249,12 +249,12 @@ struct node *node_previous(const struct node *node)
 
 bool node_is_valid(const struct node *node)
 {
-        return (node && node != &node->head->node);
+        return (node && node != &node->head->base_node);
 }
 
 void *node_data(struct node *node)
 {
-        if (!node || node == &node->head->node)
+        if (!node || node == &node->head->base_node)
                 return NULL;
 
         return node->data;
@@ -303,7 +303,7 @@ static int list_it_previous(struct iterator *it)
 static bool list_it_is_valid(const struct iterator *it)
 {
         const struct list_it *l_it = (const struct list_it *)it;
-        return (l_it->node != &l_it->list->node);
+        return (l_it->node != &l_it->list->base_node);
 }
 
 static void *list_it_data(const struct iterator *it)
@@ -351,10 +351,10 @@ static int list_rit_remove(struct iterator *it)
 
 static struct iterator *list_it_dup(const struct iterator *it)
 {
-        const struct list_it *l_it = (const struct list_it *)it;
         if (!list_it_is_valid(it))
                 return NULL;
 
+        const struct list_it *l_it = (const struct list_it *)it;
         struct list_it *dup =
                         list_it_create(l_it->list, l_it->node, l_it->it.cbs);
         return (struct iterator *)dup;
@@ -362,6 +362,9 @@ static struct iterator *list_it_dup(const struct iterator *it)
 
 static int list_it_copy(struct iterator *dest, const struct iterator *src)
 {
+        if (!list_it_is_valid(dest) || !list_it_is_valid(src))
+                return -EINVAL;
+
         struct list_it *l_dest = (struct list_it *)dest;
         const struct list_it *l_src = (const struct list_it *)src;
 
@@ -409,8 +412,8 @@ struct iterator *list_begin(const struct list *list)
         if (!list)
                 return NULL;
 
-        struct list_it *l_it =
-                        list_it_create(list, list->node.next, &list_it_cbs);
+        struct list_it *l_it = list_it_create(
+                        list, list->base_node.next, &list_it_cbs);
         if (!l_it)
                 return NULL;
 
@@ -422,8 +425,8 @@ struct iterator *list_end(const struct list *list)
         if (!list)
                 return NULL;
 
-        struct list_it *l_it =
-                        list_it_create(list, list->node.previous, &list_it_cbs);
+        struct list_it *l_it = list_it_create(
+                        list, list->base_node.previous, &list_it_cbs);
         if (!l_it)
                 return NULL;
 
@@ -436,7 +439,7 @@ struct iterator *list_rbegin(const struct list *list)
                 return NULL;
 
         struct list_it *l_it = list_it_create(
-                        list, list->node.previous, &list_rit_cbs);
+                        list, list->base_node.previous, &list_rit_cbs);
         if (!l_it)
                 return NULL;
 
@@ -448,8 +451,8 @@ struct iterator *list_rend(const struct list *list)
         if (!list)
                 return NULL;
 
-        struct list_it *l_it =
-                        list_it_create(list, list->node.next, &list_rit_cbs);
+        struct list_it *l_it = list_it_create(
+                        list, list->base_node.next, &list_rit_cbs);
         if (!l_it)
                 return NULL;
 
