@@ -176,7 +176,7 @@ static int resize_map_bucket_list(struct map *map)
                 return -ENOMEM;
 
         /* Move nodes from old list to new one */
-        for (unsigned int i = 0; i < map->count; ++i) {
+        for (unsigned int i = 0; i < map->bucket_count; ++i) {
                 const struct node *bucket = &map->bucket_list[i];
                 struct node *node = bucket->next;
 
@@ -266,7 +266,7 @@ int map_add(struct map *map, const void *key, const void *value)
         if (!node)
                 return -ENOMEM;
 
-        if (map->count == map->bucket_count) {
+        if (map->count >= map->bucket_count * 3 / 4) {
                 if (resize_map_bucket_list(map) < 0) {
                         destroy_node(node, map->key_type->destroy,
                                         map->value_type->destroy);
