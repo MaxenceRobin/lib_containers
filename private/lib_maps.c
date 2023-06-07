@@ -176,7 +176,7 @@ static int resize_map_bucket_list(struct map *map)
                 return -ENOMEM;
 
         /* Move nodes from old list to new one */
-        for (unsigned int i = 0; i < map->count; ++i) {
+        for (unsigned int i = 0; i < map->bucket_count; ++i) {
                 const struct node *bucket = &map->bucket_list[i];
                 struct node *node = bucket->next;
 
