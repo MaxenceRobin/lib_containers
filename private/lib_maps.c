@@ -266,7 +266,7 @@ int map_add(struct map *map, const void *key, const void *value)
         if (!node)
                 return -ENOMEM;
 
-        if (map->count == map->bucket_count) {
+        if (map->count >= map->bucket_count * 3 / 4) {
                 if (resize_map_bucket_list(map) < 0) {
                         destroy_node(node, map->key_type->destroy,
                                         map->value_type->destroy);
