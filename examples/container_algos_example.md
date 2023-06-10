@@ -45,27 +45,6 @@ static void print_container(const char *name, struct iterator *from)
         it_unref(it);
 }
 
-static void print_map(const char *name, struct iterator *from)
-{
-        struct iterator *it = it_dup(from); /* Avoid modifying given it */
-
-        printf("\n%s = {\n", name);
-
-        while (it_is_valid(it)) {
-                const struct pair *pair = it_data(it);
-                const struct type_string *key = pair->key;
-                const int *value = pair->value;
-
-                printf("\t<'%s', %d>\n", key->string, *value);
-                it_next(it);
-        }
-
-        printf("}\n");
-
-        it_unref(from);
-        it_unref(it);
-}
-
 static void modulo(void *data, void *arg)
 {
         int *value = data;
@@ -102,25 +81,25 @@ void main()
 
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
-        print_map("map", map_begin(map, MAP_IT_TYPE_PAIR));
+        print_container("map", map_begin(map));
 
         ctn_for_each(vector_begin(vector), modulo, INT(10));
         ctn_for_each(list_begin(list), modulo, INT(10));
-        ctn_for_each(map_begin(map, MAP_IT_TYPE_VALUE), modulo, INT(10));
+        ctn_for_each(map_begin(map), modulo, INT(10));
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
-        print_map("map", map_begin(map, MAP_IT_TYPE_PAIR));
+        print_container("map", map_begin(map));
 
         ctn_remove_if(vector_begin(vector), is_lower_than, INT(3));
         ctn_remove_if(list_begin(list), is_lower_than, INT(5));
-        ctn_remove_if(map_begin(map, MAP_IT_TYPE_VALUE), is_lower_than, INT(7));
+        ctn_remove_if(map_begin(map), is_lower_than, INT(7));
         print_container("vector", vector_begin(vector));
         print_container("list", list_begin(list));
-        print_map("map", map_begin(map, MAP_IT_TYPE_PAIR));
+        print_container("map", map_begin(map));
 
         print_container("vector reverse", vector_rbegin(vector));
         print_container("list reverse", list_rbegin(list));
-        print_map("map reverse", map_rbegin(map, MAP_IT_TYPE_PAIR));
+        print_container("map reverse", map_rbegin(map));
 
         vector_destroy(vector);
         list_destroy(list);
@@ -134,53 +113,23 @@ vector = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 
 list = {100, 101, 102, 103, 104, 105, 106, 107, 108, 109}
 
-map = {
-        <'key_3', 1003>
-        <'key_4', 1004>
-        <'key_5', 1005>
-        <'key_6', 1006>
-        <'key_7', 1007>
-        <'key_8', 1008>
-        <'key_9', 1009>
-        <'key_0', 1000>
-        <'key_1', 1001>
-        <'key_2', 1002>
-}
+map = {1003, 1004, 1005, 1006, 1007, 1008, 1009, 1000, 1001, 1002}
 
 vector = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 list = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-map = {
-        <'key_3', 3>
-        <'key_4', 4>
-        <'key_5', 5>
-        <'key_6', 6>
-        <'key_7', 7>
-        <'key_8', 8>
-        <'key_9', 9>
-        <'key_0', 0>
-        <'key_1', 1>
-        <'key_2', 2>
-}
+map = {3, 4, 5, 6, 7, 8, 9, 0, 1, 2}
 
 vector = {3, 4, 5, 6, 7, 8, 9}
 
 list = {5, 6, 7, 8, 9}
 
-map = {
-        <'key_7', 7>
-        <'key_8', 8>
-        <'key_9', 9>
-}
+map = {7, 8, 9}
 
 vector reverse = {9, 8, 7, 6, 5, 4, 3}
 
 list reverse = {9, 8, 7, 6, 5}
 
-map reverse = {
-        <'key_9', 9>
-        <'key_8', 8>
-        <'key_7', 7>
-}
+map reverse = {9, 8, 7}
 ```

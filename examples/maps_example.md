@@ -27,7 +27,7 @@ static void print_pair(const struct pair *pair)
 
 static void print_map(const struct map *map)
 {
-        struct iterator *it = map_begin(map, MAP_IT_TYPE_PAIR);
+        struct iterator *it = map_begin_pair(map);
         printf("\nmap = {\n");
 
         while (it_is_valid(it)) {

@@ -23,11 +23,6 @@ struct pair {
         void *value;
 };
 
-enum map_it_type {
-        MAP_IT_TYPE_VALUE,
-        MAP_IT_TYPE_PAIR
-};
-
 /* API -----------------------------------------------------------------------*/
 
 /**
@@ -98,39 +93,67 @@ int map_clear(struct map *map);
 /* Iterator API --------------------------------------------------------------*/
 
 /**
- * @brief Creates an iterator of over the first element of 'map'. The iterator
- * iterates over values or pairs depending on 'type'.
+ * @brief Creates a value iterator of over the first element of 'map'.
  *
  * @return Pointer to the iterator on success.
  * @return NULL if 'map' is invalid or on failure.
  */
-struct iterator *map_begin(const struct map *map, enum map_it_type type);
+struct iterator *map_begin(const struct map *map);
 
 /**
- * @brief Creates an iterator over the last element of 'map'. The iterator
- * iterates over values or pairs depending on 'type'.
+ * @brief Creates a value iterator over the last element of 'map'.
  *
  * @return Pointer to the iterator on success.
  * @return NULL if 'map' is invalid or on failure.
  */
-struct iterator *map_end(const struct map *map, enum map_it_type type);
+struct iterator *map_end(const struct map *map);
 
 /**
- * @brief Creates a reverse iterator over the last element of 'map'. The
- * iterator iterates over values or pairs depending on 'type'.
+ * @brief Creates a reverse value iterator over the last element of 'map'.
  *
  * @return Pointer to the iterator on success.
  * @return NULL if 'map' is invalid or on failure.
  */
-struct iterator *map_rbegin(const struct map *map, enum map_it_type type);
+struct iterator *map_rbegin(const struct map *map);
 
 /**
- * @brief Creates a reverse iterator over the first element of 'map'. The
- * iterator iterates over values or pairs depending on 'type'.
+ * @brief Creates a reverse value iterator over the first element of 'map'.
  *
  * @return Pointer to the iterator on success.
  * @return NULL if 'map' is invalid or on failure.
  */
-struct iterator *map_rend(const struct map *map, enum map_it_type type);
+struct iterator *map_rend(const struct map *map);
+
+/**
+ * @brief Creates a pair iterator of over the first element of 'map'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'map' is invalid or on failure.
+ */
+struct iterator *map_begin_pair(const struct map *map);
+
+/**
+ * @brief Creates a pair iterator over the last element of 'map'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'map' is invalid or on failure.
+ */
+struct iterator *map_end_pair(const struct map *map);
+
+/**
+ * @brief Creates a reverse pair iterator over the last element of 'map'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'map' is invalid or on failure.
+ */
+struct iterator *map_rbegin_pair(const struct map *map);
+
+/**
+ * @brief Creates a reverse pair iterator over the first element of 'map'.
+ *
+ * @return Pointer to the iterator on success.
+ * @return NULL if 'map' is invalid or on failure.
+ */
+struct iterator *map_rend_pair(const struct map *map);
 
 #endif /* LIB_MAPS_H */
