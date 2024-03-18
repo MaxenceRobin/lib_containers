@@ -7,6 +7,7 @@
 
 #include "lib_types.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -14,65 +15,65 @@
 
 /* Copy and comp callbacks -----------*/
 
-#define DECL_COPY_COMP(name, type) \
-\
-static void copy_##name(void *dest, const void *src) \
-{ \
-        *((type *)dest) = *((type *)src); \
-} \
-\
-static int comp_##name(const void *first, const void *second) \
-{ \
-        return *((type *)first) - *((type *)second); \
+#define DECL_COPY_COMP(name, type)                              \
+                                                                \
+static void copy_##name(void *dest, const void *src)            \
+{                                                               \
+        *((type *)dest) = *((type *)src);                       \
+}                                                               \
+                                                                \
+static int comp_##name(const void *first, const void *second)   \
+{                                                               \
+        return *((type *)first) - *((type *)second);            \
 }
 
 /* Hashable types --------------------*/
 
-#define DECL_TYPE_HASH(name, type) \
-\
-DECL_COPY_COMP(name, type) \
-\
-static unsigned long hash_##name(const void *data) \
-{ \
-        unsigned long value = *((type *)data); \
-\
-        value = ((value >> 16) ^ value) * 0x45d9f3b; \
-        value = ((value >> 16) ^ value) * 0x45d9f3b; \
-        value = (value >> 16) ^ value; \
-\
-        return value; \
-} \
-\
-static struct type_info info_##name = { \
-        .size = sizeof(type), \
-        .copy = copy_##name, \
-        .comp = comp_##name, \
-        .hash = hash_##name, \
-        .destroy = type_default_destroy \
-}; \
-\
-const struct type_info *type_##name() \
-{ \
-        return &info_##name; \
+#define DECL_TYPE_HASH(name, type)                              \
+                                                                \
+DECL_COPY_COMP(name, type)                                      \
+                                                                \
+static unsigned long hash_##name(const void *data)              \
+{                                                               \
+        unsigned long value = *((type *)data);                  \
+                                                                \
+        value = ((value >> 16) ^ value) * 0x45d9f3b;            \
+        value = ((value >> 16) ^ value) * 0x45d9f3b;            \
+        value = (value >> 16) ^ value;                          \
+                                                                \
+        return value;                                           \
+}                                                               \
+                                                                \
+static struct type_info info_##name = {                         \
+        .size = sizeof(type),                                   \
+        .copy = copy_##name,                                    \
+        .comp = comp_##name,                                    \
+        .hash = hash_##name,                                    \
+        .destroy = type_default_destroy                         \
+};                                                              \
+                                                                \
+const struct type_info *type_##name()                           \
+{                                                               \
+        return &info_##name;                                    \
 }
 
 /* Non hashable types ----------------*/
 
-#define DECL_TYPE_NO_HASH(name, type) \
-\
-DECL_COPY_COMP(name, type) \
-\
-static struct type_info info_##name = { \
-        .size = sizeof(type), \
-        .copy = copy_##name, \
-        .comp = comp_##name, \
-        .hash = NULL, \
-        .destroy = type_default_destroy \
-}; \
-\
-const struct type_info *type_##name() \
-{ \
-        return &info_##name; \
+#define DECL_TYPE_NO_HASH(name, type)                           \
+                                                                \
+DECL_COPY_COMP(name, type)                                      \
+                                                                \
+static struct type_info info_##name = {                         \
+        .size = sizeof(type),                                   \
+        .copy = copy_##name,                                    \
+        .comp = comp_##name,                                    \
+        .hash = NULL,                                           \
+        .destroy = type_default_destroy                         \
+};                                                              \
+                                                                \
+const struct type_info *type_##name()                           \
+{                                                               \
+        return &info_##name;                                    \
 }
 
 /* API -----------------------------------------------------------------------*/
@@ -129,6 +130,18 @@ static int comp_pointer(const void *first, const void *second)
         return a->pointer - b->pointer;
 }
 
+static unsigned long hash_pointer(const void *data)
+{
+        const struct type_pointer *ptr = data;
+        uintptr_t value = (uintptr_t)ptr->pointer;
+
+        value = ((value >> 16) ^ value) * 0x45d9f3b;
+        value = ((value >> 16) ^ value) * 0x45d9f3b;
+        value = (value >> 16) ^ value;
+
+        return value;
+}
+
 static void destroy_pointer(const void *data)
 {
         const struct type_pointer *value = data;
@@ -139,7 +152,7 @@ static struct type_info info_pointer = {
         .size = sizeof(struct type_pointer),
         .copy = copy_pointer,
         .comp = comp_pointer,
-        .hash = NULL,
+        .hash = hash_pointer,
         .destroy = type_default_destroy
 };
 
@@ -147,7 +160,7 @@ static struct type_info info_auto_pointer = {
         .size = sizeof(struct type_pointer),
         .copy = copy_destroy_pointer,
         .comp = comp_pointer,
-        .hash = NULL,
+        .hash = hash_pointer,
         .destroy = destroy_pointer
 };
 
